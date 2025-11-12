@@ -31,7 +31,7 @@ export default function AddProtese({ navigation }) {
 
             {/* 👇 Imagem responsiva e maior */}
             <Image
-              source={require('../../assets/Elementos_Complementares/MeninosFelizes.PNG')}
+              source={require('../../assets/Elementos_Complementares/MeninosFelizes.png')}
               style={styles.meninosImage}
               resizeMode="contain"
             />

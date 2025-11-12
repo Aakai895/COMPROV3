@@ -273,7 +273,7 @@ export default function DetalhesClinica() {
 
         <View style={styles.infoCard}>
           <View style={styles.infoRow}>
-            <Image source={require('../../assets/icones/location2Icon.JPG')} style={styles.smallIcon} />
+            <Image source={require('../../assets/icones/location2Icon.jpg')} style={styles.smallIcon} />
             <Text style={styles.infoText}>{addressText}</Text>
           </View>
           

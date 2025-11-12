@@ -350,7 +350,7 @@ export default function DetalhesClinica() {
 
               <View style={styles.searchBox}>
                 <Image
-                  source={require("../../assets/icones/Lupa3Icon.JPG")}
+                  source={require("../../assets/icones/Lupa3Icon.jpg")}
                   style={styles.searchIcon}
                 />
                 <TextInput
@@ -363,14 +363,14 @@ export default function DetalhesClinica() {
               <View style={styles.filtrosContainer}>
                 <TouchableOpacity style={[styles.filtroBtn, styles.filtroTag]}>
                   <Image
-                    source={require("../../assets/icones/Filtro2.JPG")}
+                    source={require("../../assets/icones/Filtro2.jpg")}
                     style={styles.filtroIcon}
                     resizeMode="contain"
                   />
                   <Text style={styles.filtroTexto}>Filtro</Text>
 
                   <Image
-                    source={require("../../assets/icones/setaBaixa.JPG")}
+                    source={require("../../assets/icones/setaBaixa.jpg")}
                     style={styles.setaIcon}
                     resizeMode="contain"
                   />

@@ -112,7 +112,7 @@ export default function Home({ navigation }) {
           onPress={() => navigation.navigate('PoliticaPrivCE')}
         >
           <View style={styles.optionLeft}>
-            <Image source={require('../../assets/icones/SeguPrivacidadeIcon.JPG')}
+            <Image source={require('../../assets/icones/SeguPrivacidadeIcon.jpg')}
               style={styles.iconImage}
               resizeMode="contain"
             />
