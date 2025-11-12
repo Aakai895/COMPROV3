@@ -1,0 +1,284 @@
+
+APAGAR DADOS (HUMORES)
+
+<TouchableOpacity
+  style={{ padding: 12, backgroundColor: 'red', margin: 10, borderRadius: 8 }}
+  onPress={async () => {
+    await AsyncStorage.removeItem('registrosHumor');
+    alert('Registros apagados!');
+    carregarHistorico();  // atualiza a lista depois de apagar
+  }}
+>
+  <Text style={{ color: '#fff', textAlign: 'center' }}>Apagar Registros</Text>
+</TouchableOpacity>
+
+token: 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
+
+
+
+  return (
+    <View style={styles.screen}>
+      {/* Cabeçalho */}
+      <View style={styles.headerContainer}>
+        <Image source={image} style={styles.mainImage} />
+        <TouchableWithoutFeedback onPress={() => navigation.goBack()}>
+          <Image
+            source={require('../../assets/icones/SetaVoltar.png')}
+            style={styles.backArrow}
+            resizeMode="contain"
+          />
+        </TouchableWithoutFeedback>
+      </View>
+
+      {/* Conteúdo rolável */}
+      <ScrollView style={styles.scrollArea} showsVerticalScrollIndicator={false}>
+        <View style={styles.card}>
+          <View style={styles.avaliacaoTrapezio}>
+            <Text style={styles.textAgendamento}>Agendamento</Text>
+          </View>
+
+          <Text style={styles.name}>{name}</Text>
+          <Text style={styles.especialidadesText}>{especialidades.join(', ')}</Text>
+          <View style={styles.divider} />
+
+          <View style={styles.infoCard}>
+            <Text style={styles.infoText}>{addressText}</Text>
+            <Text style={styles.textAgendamento2}>Escolha o dia</Text>
+          </View>
+
+          {/* Dias da semana */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 10 }}>
+            {dias.map((item, index) => {
+              const selecionado = diaSelecionado?.completo === item.completo;
+              return (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => setDiaSelecionado(item)}
+                  style={[styles.cardDia, selecionado && styles.cardDiaSelecionado]}
+                >
+                  <Text style={[styles.textDiaLabel, selecionado && styles.textSelecionado]}>{item.label}</Text>
+                  <Text style={[styles.textDiaData, selecionado && styles.textSelecionado]}>
+                    {item.dia} {item.mes}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+
+            {/* Card extra - abrir calendário */}
+            <TouchableOpacity style={styles.cardDiaEspecial} onPress={() => setShowDatePicker(true)}>
+              <Image
+                source={require('../../assets/icones/calendarioIcon.png')}
+                style={{ width: 24, height: 24, marginBottom: 4 }}
+                resizeMode="contain"
+              />
+              <Text style={styles.textDiaLabel}>Selecionar Data</Text>
+            </TouchableOpacity>
+          </ScrollView>
+
+          {/* Horários */}
+          <Text style={{ marginTop: 20, fontSize: 20 }}>Horário</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 10 }}>
+            {horarios.map((h, index) => {
+              const selecionado = horarioSelecionado === h;
+              return (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => setHorarioSelecionado(h)}
+                  style={[styles.cardHorario, selecionado && styles.cardHorarioSelecionado]}
+                >
+                  <Text style={[styles.textHorario, selecionado && styles.textHorarioSelecionado]}>{h}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          {showDatePicker && (
+            <DateTimePicker
+              value={new Date()}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              minimumDate={new Date()}
+              onChange={onDateChange}
+            />
+          )}
+        </View>
+      </ScrollView>
+
+      {/* Botão fixo */}
+      <View style={styles.agendarContainer}>
+        <TouchableOpacity
+          style={styles.agendarButton}
+          onPress={() =>
+            navigation.navigate('AgendarConsulta', {
+              clinicId: clinic.id,
+              dataSelecionada: diaSelecionado,
+              horarioSelecionado,
+            })
+          }
+        >
+          <Text style={styles.agendarText}>Agendar Consulta</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scrollArea: {
+    flex: 1,
+  },
+  headerContainer: {
+    height: 250,
+    backgroundColor: '#fff',
+  },
+  mainImage: {
+    width: '100%',
+    height: 250,
+  },
+  backArrow: {
+    position: 'absolute',
+    top: 45,
+    left: 20,
+    width: 30,
+    height: 30,
+    zIndex: 10,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 35,
+    borderTopRightRadius: 35,
+    marginTop: -27,
+    paddingBottom: 100,
+  },
+  avaliacaoTrapezio: {
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  textAgendamento: {
+    fontSize: 22,
+    color: '#47667b',
+    fontWeight: 'bold',
+  },
+  name: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#000',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  especialidadesText: {
+    fontSize: 18,
+    marginHorizontal: 16,
+    marginTop: 5,
+    color: '#1c404b',
+    marginBottom: 20,
+  },
+  divider: {
+    height: 1.5,
+    backgroundColor: '#d9d9d9',
+    marginHorizontal: 16,
+  },
+  infoCard: {
+    marginHorizontal: 16,
+    borderRadius: 15,
+    padding: 12,
+    marginBottom: 12,
+    marginTop: 10,
+  },
+  infoText: {
+    fontSize: 18,
+    color: '#000',
+  },
+  textAgendamento2: {
+    color: '#737373',
+    fontSize: 20,
+    marginTop: 15,
+  },
+  cardDia: {
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    marginRight: 10,
+    alignItems: 'center',
+  },
+  cardDiaSelecionado: {
+    backgroundColor: '#47667b',
+    borderColor: '#47667b',
+  },
+  textDiaLabel: {
+    fontSize: 14,
+    color: '#6d6d6d',
+  },
+  textDiaData: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#6d6d6d',
+  },
+  textSelecionado: {
+    color: '#fff',
+  },
+  cardDiaEspecial: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    backgroundColor: '#eee',
+    borderWidth: 1,
+    borderColor: '#bbb',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  cardHorario: {
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    marginRight: 10,
+  },
+  cardHorarioSelecionado: {
+    backgroundColor: '#47667b',
+    borderColor: '#47667b',
+  },
+  textHorario: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#6d6d6d',
+  },
+  textHorarioSelecionado: {
+    color: '#fff',
+  },
+  agendarContainer: {
+    position: 'absolute',
+    bottom: 14,
+    left: 16,
+    right: 16,
+    alignItems: 'center',
+  },
+  agendarButton: {
+    width: '100%',
+    backgroundColor: '#799689',
+    paddingVertical: 14,
+    borderRadius: 30,
+    alignItems: 'center',
+    elevation: 3,
+  },
+  agendarText: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '700',
+  },
+});
