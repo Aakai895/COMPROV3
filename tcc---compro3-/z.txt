@@ -12,7 +12,6 @@ APAGAR DADOS (HUMORES)
   <Text style={{ color: '#fff', textAlign: 'center' }}>Apagar Registros</Text>
 </TouchableOpacity>
 
-token: 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
 
 
 
