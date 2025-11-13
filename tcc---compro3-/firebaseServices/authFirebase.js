@@ -1,4 +1,11 @@
-// services/AuthFirebase.js - Adicione estas funções
+import { doc, setDoc, getDoc, updateDoc, } from "firebase/firestore";
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut,
+  sendPasswordResetEmail,
+  updatePassword,
+} from "firebase/auth";
 
 import { 
   authUsuarios, 
@@ -6,17 +13,10 @@ import {
   authClinicas,
   dbUsuarios,
   dbEmpresas, 
-  dbClinicas
+  dbClinicas,
 } from "./firebaseConfig";
 
-import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut,
-  sendPasswordResetEmail,
-  updatePassword 
-} from "firebase/auth";
-import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
+
 
 // ... (suas funções existentes permanecem aqui) ...
 
