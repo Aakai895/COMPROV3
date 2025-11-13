@@ -12,12 +12,15 @@ import { useNavigation } from '@react-navigation/native';
 import CadastroFundo from '../../Style/Backgrounds/CadUsuario_Fundo';
 import { getResponsiveSizes } from '../../Style/Responsive';
 import { Picker } from '@react-native-picker/picker';
+import { useRoute } from '@react-navigation/native';
+import { registerUser } from '../../services/AuthFirebase';
 
 export default function CadastroUsuario2() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
-
+const route = useRoute();
+const { dadosTela1 } = route.params || {};
   const {
     subtitleFontSize,
     dotSize,
@@ -51,7 +54,7 @@ export default function CadastroUsuario2() {
   };
 
   useEffect(() => {
-    const onShow = (e: any) => {
+    const onShow = (e) => {
       const h = e.endCoordinates?.height || 0;
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setKeyboardHeight(h);
@@ -92,13 +95,46 @@ export default function CadastroUsuario2() {
   const placeholderColor = keyboardVisible ? '#fff' : '#aaa';
   const iconColor = keyboardVisible ? '#fff' : '#aaa';
 
-  const handleCadastrar = () => {
-    if (!estado || !cidade || !endereco.trim() || !emailConfirm.trim() || !senhaConfirm.trim()) {
-      alert('Por favor, preencha todos os campos obrigatórios.');
-      return;
-    }
+  const handleCadastrar = async () => {
+  if (!estado || !cidade || !endereco.trim() || !emailConfirm.trim() || !senhaConfirm.trim()) {
+    alert('Por favor, preencha todos os campos obrigatórios.');
+    return;
+  }
+
+  if (dadosTela1.email !== emailConfirm) {
+    alert('Os emails não coincidem!');
+    return;
+  }
+
+  if (dadosTela1.senha !== senhaConfirm) {
+    alert('As senhas não coincidem!');
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    // Combinar dados da tela 1 e tela 2
+    const dadosCompletos = {
+      ...dadosTela1,
+      estado,
+      cidade,
+      endereco,
+      tipo: 'usuario'
+    };
+
+    await registerUser(dadosTela1.email, dadosTela1.senha, dadosCompletos);
+    
+    alert('Usuário cadastrado com sucesso!');
     navigation.navigate('Login');
-  };
+    
+  } catch (error) {
+    console.error('Erro no cadastro:', error);
+    // ... tratamento de erro
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (!fontsLoaded) return null;
 

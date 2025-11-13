@@ -47,7 +47,7 @@ export default function CadastroEmpresaScreen() {
   };
 
   useEffect(() => {
-    const onShow = (e: any) => {
+    const onShow = (e) => {
       const h = e.endCoordinates?.height || 0;
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setKeyboardHeight(h);
@@ -84,13 +84,25 @@ export default function CadastroEmpresaScreen() {
   const placeholderColor = keyboardVisible ? '#fff' : '#aaa';
   const iconColor = keyboardVisible ? '#fff' : '#aaa';
 
-  const handleProximo = () => {
-    if (!empresa || !cnpj || !telefone1 || !estado || !cidade || !endereco) {
-      alert('Preencha todos os campos obrigatórios.');
-      return;
-    }
-    navigation.navigate('CadastroEmpresa2');
+const handleProximo = () => {
+  if (!empresa || !cnpj || !telefone1 || !estado || !cidade || !endereco) {
+    alert('Preencha todos os campos obrigatórios.');
+    return;
+  }
+
+  // Passar dados para a próxima tela
+  const dadosTela1 = {
+    empresa,
+    cnpj,
+    telefone1,
+    telefone2,
+    estado,
+    cidade,
+    endereco
   };
+
+  navigation.navigate('CadastroEmpresa2', { dadosTela1 });
+};
 
   if (!fontsLoaded) return null;
 

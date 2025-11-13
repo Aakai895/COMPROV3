@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image,
   Platform, ScrollView, TouchableWithoutFeedback, Keyboard, 
-  useWindowDimensions, LayoutAnimation, Animated,} from 'react-native';
+  useWindowDimensions, LayoutAnimation, Animated, Alert} from 'react-native';
 import Background from '../../Style/Backgrounds/Login_Fundo';
 import Checkbox from 'expo-checkbox';
 import { AntDesign, FontAwesome } from '@expo/vector-icons';
@@ -9,6 +9,11 @@ import { Eye, EyeOff } from 'lucide-react-native';
 import { useFonts } from 'expo-font';
 import { getResponsiveSizes } from '../../Style/Responsive';
 import { useNavigation } from '@react-navigation/native';
+import { 
+  loginUser, 
+  loginEmpresa, 
+  loginClinica 
+} from '../../services/AuthFirebase';
 
 export default function LoginScreen() { 
   const navigation = useNavigation();
@@ -28,8 +33,9 @@ export default function LoginScreen() {
   const [isChecked, setChecked] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [cpfCnpj, setCpfCnpj] = useState('');
+  const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const animatedOffset = useRef(new Animated.Value(0)).current;
 
@@ -39,7 +45,7 @@ export default function LoginScreen() {
   });
 
   useEffect(() => {
-    const onShow = (e: any) => {
+    const onShow = (e) => {
       const h = e.endCoordinates?.height || 0;
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setKeyboardHeight(h);
@@ -74,6 +80,119 @@ export default function LoginScreen() {
     };
   }, [animatedOffset]);
 
+  const handleLogin = async () => {
+    if (!email.trim() || !senha.trim()) {
+      alert('Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      console.log('Tentando login com:', email);
+      
+      // Tentar login como Usuário primeiro
+      try {
+        const userCredential = await loginUser(email, senha);
+        console.log('Login usuário bem-sucedido:', userCredential.user.uid);
+        navigation.navigate('TelasUsuario', { screen: 'Home' });
+        return;
+      } catch (userError) {
+        console.log('Não é usuário:', userError.code);
+      }
+
+      // Tentar login como Empresa
+      try {
+        const empresaCredential = await loginEmpresa(email, senha);
+        console.log('Login empresa bem-sucedido:', empresaCredential.user.uid);
+        navigation.navigate('TelasCE', { screen: 'HomeCE' });
+        return;
+      } catch (empresaError) {
+        console.log('Não é empresa:', empresaError.code);
+      }
+
+      // Tentar login como Clínica
+      try {
+        const clinicaCredential = await loginClinica(email, senha);
+        console.log('Login clínica bem-sucedido:', clinicaCredential.user.uid);
+        navigation.navigate('TelasCE', { screen: 'HomeCE' });
+        return;
+      } catch (clinicaError) {
+        console.log('Não é clínica:', clinicaError.code);
+      }
+
+      // Se nenhum login funcionou
+      Alert.alert(
+        'Erro no Login',
+        'Email ou senha incorretos. Verifique suas credenciais.',
+        [{ text: 'OK' }]
+      );
+
+    } catch (error) {
+      console.error('Erro geral no login:', error);
+      Alert.alert(
+        'Erro',
+        'Ocorreu um erro inesperado. Tente novamente.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Função alternativa mais simples (se preferir)
+  const handleLoginSimple = async () => {
+    if (!email.trim() || !senha.trim()) {
+      alert('Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Ordem de tentativa: Usuário → Empresa → Clínica
+      const authAttempts = [
+        { auth: loginUser, type: 'usuário', route: 'TelasUsuario' },
+        { auth: loginEmpresa, type: 'empresa', route: 'TelasCE' },
+        { auth: loginClinica, type: 'clínica', route: 'TelasCE' }
+      ];
+
+      for (const attempt of authAttempts) {
+        try {
+          const result = await attempt.auth(email, senha);
+          console.log(`Login ${attempt.type} bem-sucedido:`, result.user.uid);
+          
+          // Navegar para a tela correta
+          navigation.navigate(attempt.route, { 
+            screen: attempt.route === 'TelasUsuario' ? 'Home' : 'HomeCE',
+            params: { userType: attempt.type }
+          });
+          return;
+        } catch (error) {
+          console.log(`Não é ${attempt.type}:`, error.code);
+          continue; // Continua para a próxima tentativa
+        }
+      }
+
+      // Se chegou aqui, nenhum login funcionou
+      Alert.alert(
+        'Login Inválido',
+        'Email ou senha incorretos. Verifique suas credenciais.',
+        [{ text: 'OK' }]
+      );
+
+    } catch (error) {
+      console.error('Erro no login:', error);
+      Alert.alert(
+        'Erro',
+        'Não foi possível fazer login. Tente novamente.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!fontsLoaded) return null;
 
   const keyboardVisible = keyboardHeight > 0;
@@ -82,21 +201,6 @@ export default function LoginScreen() {
   const forgotPasswordColor = keyboardVisible ? '#fff' : '#b1adad';
   const orTextColor = keyboardVisible ? '#fff' : '#b1adad';
   const iconColor = keyboardVisible ? '#fff' : '#aaa';
-
-  const handleLogin = () => {
-  if (!cpfCnpj.trim() || !senha.trim()) {
-    alert('Por favor, preencha todos os campos obrigatórios.');
-    return;
-  }
-
-  if (senha === '123') {
-    navigation.navigate('TelasCE', { screen: 'HomeCE' });
-  } else if (senha === '321') {
-    navigation.navigate('TelasUsuario', { screen: 'Home' });
-  } else {
-    alert('Senha incorreta.');
-  }
-};
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -141,7 +245,7 @@ export default function LoginScreen() {
           </View>
 
           <TextInput
-            placeholder="Email/CNPJ ou AFE"
+            placeholder="Email"
             style={[
               styles.input, {
                 color: inputTextColor,
@@ -151,8 +255,11 @@ export default function LoginScreen() {
             ]}
             placeholderTextColor="#ccc"
             fontFamily="Alice"
-            value={cpfCnpj}
-            onChangeText={setCpfCnpj}
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            editable={!loading}
           />
 
           <View style={styles.passwordWrapper}>
@@ -168,9 +275,13 @@ export default function LoginScreen() {
               secureTextEntry={!passwordVisible}
               value={senha}
               onChangeText={setSenha}
+              editable={!loading}
             />
 
-            <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)}>
+            <TouchableOpacity 
+              onPress={() => setPasswordVisible(!passwordVisible)}
+              disabled={loading}
+            >
               {passwordVisible ? (
                 <Eye color={iconColor} size={25} />
               ) : (
@@ -185,6 +296,7 @@ export default function LoginScreen() {
                 value={isChecked}
                 onValueChange={setChecked}
                 color={isChecked ? '#cfd8b5' : undefined}
+                disabled={loading}
               />
               <Text style={[
                 styles.checkboxLabel,
@@ -194,7 +306,10 @@ export default function LoginScreen() {
               </Text>
             </View>
 
-            <TouchableOpacity onPress={() => navigation.navigate('EsqueciSenha')}>
+            <TouchableOpacity 
+              onPress={() => navigation.navigate('EsqueciSenha')}
+              disabled={loading}
+            >
               <Text style={[
                 styles.forgotPassword,
                   { color: forgotPasswordColor, fontSize: captionFontSize },
@@ -206,11 +321,13 @@ export default function LoginScreen() {
           </View>
 
           <TouchableOpacity
-            onPress={handleLogin}
+            onPress={handleLoginSimple}
+            disabled={loading}
             style={[
               styles.loginButton, {
                 paddingHorizontal: buttonPaddingH,
                 paddingVertical: buttonPaddingV,
+                opacity: loading ? 0.6 : 1,
               },
             ]}
           >
@@ -219,16 +336,21 @@ export default function LoginScreen() {
                 { fontSize: buttonFontSize }
               ]}
             >
-              Logar
+              {loading ? 'Entrando...' : 'Logar'}
             </Text>
           </TouchableOpacity>
 
           <View style={styles.registerPromptWrapper}>
-            <TouchableOpacity onPress={() => navigation.navigate('TipoCadastro')}>
+            <TouchableOpacity 
+              onPress={() => navigation.navigate('TipoCadastro')}
+              disabled={loading}
+            >
               <Text style={[ 
                 styles.loginTextButton, {
                   fontSize: subtitleFontSize * 0.85,
-                  fontFamily: 'Alice'},
+                  fontFamily: 'Alice',
+                  opacity: loading ? 0.6 : 1,
+                },
                 ]}
               >
                 Não possui uma conta? <Text style={styles.cadastroBold}>Cadastrar</Text>
@@ -251,8 +373,9 @@ export default function LoginScreen() {
               accessible
               accessibilityLabel="Entrar com Google"
               accessibilityRole="button"
-              style={styles.socialButton}
+              style={[styles.socialButton, { opacity: loading ? 0.6 : 1 }]}
               onPress={() => console.log('Login com Google')}
+              disabled={loading}
             >
               <AntDesign name="google" size={dotSize * 4} color="#787876" />
             </TouchableOpacity>
@@ -261,8 +384,9 @@ export default function LoginScreen() {
               accessible
               accessibilityLabel="Entrar com Apple"
               accessibilityRole="button"
-              style={styles.socialButton}
+              style={[styles.socialButton, { opacity: loading ? 0.6 : 1 }]}
               onPress={() => console.log('Login com Apple')}
+              disabled={loading}
             >
               <FontAwesome name="apple" size={dotSize * 4} color="#787876" />
             </TouchableOpacity>

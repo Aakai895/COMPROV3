@@ -44,7 +44,7 @@ export default function CadastroUsuario2() {
   });
 
   useEffect(() => {
-    const onShow = (e: any) => {
+    const onShow = (e) => {
       const h = e.endCoordinates?.height || 0;
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setKeyboardHeight(h);
@@ -83,13 +83,23 @@ export default function CadastroUsuario2() {
   const placeholderColor = keyboardVisible ? '#fff' : '#aaa';
   const iconColor = keyboardVisible ? '#fff' : '#aaa';
 
-  const handleProximo = () => {
-    if (!nome || !dataNascimento || !email.trim() || !senhaConfirm.trim()) {
-      alert('Por favor, preencha todos os campos obrigatórios.');
-      return;
-    }
-    navigation.navigate('CadastroUsuario2'); 
+const handleProximo = () => {
+  if (!nome || !dataNascimento || !email.trim() || !senhaConfirm.trim()) {
+    alert('Por favor, preencha todos os campos obrigatórios.');
+    return;
+  }
+
+  // Passar dados para a próxima tela
+  const dadosTela1 = {
+    nome,
+    dataNascimento: dataNascimento.toISOString(), // Converter para string
+    sexo,
+    email,
+    senha: senhaConfirm
   };
+
+  navigation.navigate('CadastroUsuario2', { dadosTela1 });
+};
 
   function formatarData(date) {
     if (!date) return '';

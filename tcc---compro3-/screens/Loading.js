@@ -12,7 +12,7 @@ export default function Loading() {
       duration: 4000,
       useNativeDriver: false,
     }).start(() => {
-      navigation.replace('Main');
+      navigation.replace('Bem_Vindo1');
     });
   }, [navigation, progress]);
 

@@ -9,6 +9,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AntDesign, FontAwesome } from '@expo/vector-icons';
 import { Eye, EyeOff } from 'lucide-react-native';
 import { getResponsiveSizes } from '../../Style/Responsive';
+import { useRoute } from '@react-navigation/native';
+import { registerEmpresa } from '../../services/AuthFirebase';
 
 export default function CadastroEmpresaScreen() {
   const navigation = useNavigation();
@@ -21,6 +23,8 @@ export default function CadastroEmpresaScreen() {
     logoWidth,
     logoHeight,
   } = getResponsiveSizes(width, height);
+const route = useRoute();
+const { dadosTela1 } = route.params || {};
 
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [especialidades, setEspecialidades] = useState('');
@@ -76,13 +80,45 @@ export default function CadastroEmpresaScreen() {
   const placeholderColor = keyboardVisible ? '#fff' : '#aaa';
   const iconColor = keyboardVisible ? '#fff' : '#aaa';
 
-  const handleCadastrar = () => {
-    if (!especialidades || !email || !senha || !confirmarSenha || !confirmarEmail ) {
-      alert('Preencha todos os campos obrigatórios.');
-      return;
-    }
-    navigation.navigate('TelasCE');
-  };
+  const handleCadastrar = async () => {
+  if (!especialidades || !email || !senha || !confirmarSenha || !confirmarEmail) {
+    alert('Preencha todos os campos obrigatórios.');
+    return;
+  }
+
+  if (email !== confirmarEmail) {
+    alert('Os emails não coincidem!');
+    return;
+  }
+
+  if (senha !== confirmarSenha) {
+    alert('As senhas não coincidem!');
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    // Combinar dados da tela 1 e tela 2
+    const dadosCompletos = {
+      ...dadosTela1,
+      especialidades,
+      email,
+      tipo: 'empresa'
+    };
+
+    await registerEmpresa(email, senha, dadosCompletos);
+    
+    alert('Empresa cadastrada com sucesso!');
+    navigation.navigate('Login');
+    
+  } catch (error) {
+    console.error('Erro no cadastro:', error);
+    // ... tratamento de erro similar ao da clínica
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (!fontsLoaded) return null;
 

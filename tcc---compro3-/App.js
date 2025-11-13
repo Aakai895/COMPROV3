@@ -1,7 +1,6 @@
 import React from 'react';
-import { createDrawerNavigator } from '@react-navigation/drawer';
-import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
 
 // Telas Usuário
 import Loading from './screens/Loading';
@@ -23,7 +22,7 @@ import Carrinho from './screens/TelasUsuario/Carrinho';
 import FormasCompra from './screens/TelasUsuario/Compra';
 import Loja from './screens/TelasUsuario/Loja';
 import FiltroLoja from './screens/TelasUsuario/FiltroLoja';
-import Consultas from './screens/TelasUsuario/Consultas'
+import Consultas from './screens/TelasUsuario/Consultas';
 import FiltroConsultas from './screens/TelasUsuario/FiltroConsultas';
 import MinhasConsultas from './screens/TelasUsuario/MinhasConsultas';
 import CancelarConsulta from './screens/TelasUsuario/CancelarConsulta';
@@ -59,87 +58,65 @@ import ConsultasCE from './screens/TelasCE/ConsultasCE';
 import ChatCE from './screens/TelasCE/ChatCE';
 import ConversaCE from './screens/TelasCE/ConversaCE';
 
-const Drawer = createDrawerNavigator();
 const Stack = createStackNavigator();
 
-function DrawerScreens() {
+export default function App() {
   return (
-    <Drawer.Navigator initialRouteName="TelasUsuario"screenOptions={{headerShown: false, 
-    drawerStyle: {
-      display: 'none', 
-      width: 0,
-    },
-    drawerContentStyle: {
-      display: 'none', 
-    },
-    swipeEnabled: false, 
-      drawerType: 'front',
-    }}>
-      <Drawer.Screen name="Bem_Vindo1" component={Bem_Vindo1} />
-      <Drawer.Screen name="Bem_Vindo2" component={Bem_Vindo2} />
-      <Drawer.Screen name="Bem_Vindo3" component={Bem_Vindo3} />
-      <Drawer.Screen name="Login" component={Login} />
-      <Drawer.Screen name="EsqueciSenha" component={EsqueciSenha} />
-      <Drawer.Screen name="TipoCadastro" component={TipoCadastro} />
-      <Drawer.Screen name="CadastroUsuario" component={CadastroUsuario} />
-      <Drawer.Screen name="CadastroUsuario2" component={CadastroUsuario2} />
-      <Drawer.Screen name="CadastroEmpresa" component={CadastroEmpresa} />
-      <Drawer.Screen name="CadastroEmpresa2" component={CadastroEmpresa2} />
-      <Drawer.Screen name="CadastroClinica" component={CadastroClinica} />
-      <Drawer.Screen name="CadastroClinica2" component={CadastroClinica2} />
-      <Drawer.Screen name="TelasUsuario" component={TelasUsuario} />
-      <Drawer.Screen name="Home" component={Home} />
-      <Drawer.Screen name="Carrinho" component={Carrinho} />
-      <Drawer.Screen name="FormasCompra" component={FormasCompra} />
-      <Drawer.Screen name="Loja" component={Loja} />
-      <Drawer.Screen name="FiltroLoja" component={FiltroLoja} />
-      <Drawer.Screen name="Consultas" component={Consultas} />
-      <Drawer.Screen name="FiltroConsultas" component={FiltroConsultas} />
-      <Drawer.Screen name="MinhasConsultas" component={MinhasConsultas} />
-      <Drawer.Screen name="CancelarConsulta" component={CancelarConsulta} />
-      <Drawer.Screen name="Perfil" component={Perfil} />
-      <Drawer.Screen name="Seguro" component={Seguro} />
-      <Drawer.Screen name="PoliticaPrivacidade" component={PoliticaPrivacidade} />
-      <Drawer.Screen name="Suporte" component={Suporte} />
-      <Drawer.Screen name="Configuracoes" component={Configuracoes} />
-      <Drawer.Screen name="PerguntasFrequentes" component={PerguntasFrequentes} />
-      <Drawer.Screen name="SplashEmocoes" component={SplashEmocoes} />
-      <Drawer.Screen name="Emocoes" component={Emocoes} />
-      <Drawer.Screen name="Humores" component={Humores} />
-      <Drawer.Screen name="Chat" component={Chat} />
-      <Drawer.Screen name="Conversa" component={Conversa} />
-      <Drawer.Screen name="Profile" component={Profile} />
-      <Drawer.Screen name="DadosProtese" component={DadosProtese} />
-      <Drawer.Screen name="AdicionarProtese" component={AdicionarProtese} />
-      <Drawer.Screen name="DadosClieEmp" component={DadosClieEmp} />
-      <Drawer.Screen name="VisualizarCE" component={VisualizarCE} />
-      <Drawer.Screen name="AgendamentoCE" component={AgendamentoCE} />
-      <Drawer.Screen name="SucessoConsulta" component={SucessoConsulta} />
-      <Drawer.Screen name="FalhaConsulta" component={FalhaConsulta} />
-      <Drawer.Screen name="AvaliarCE" component={AvaliarCE} />
-
-      <Drawer.Screen name="TelasCE" component={TelasCE} />
-      <Drawer.Screen name="HomeCE" component={HomeCE} />
-      <Drawer.Screen name="PerguntasFreqCE" component={PerguntasFreqCE} />
-      <Drawer.Screen name="ConfiguracoesCE" component={ConfiguracoesCE} />
-      <Drawer.Screen name="SuporteCE" component={SuporteCE} />
-      <Drawer.Screen name="PoliticaPrivCE" component={PoliticaPrivCE} />
-      <Drawer.Screen name="ConsultasCE" component={ConsultasCE} />
-      <Drawer.Screen name="ChatCE" component={ChatCE} />
-      <Drawer.Screen name="ConversaCE" component={ConversaCE} />
-    </Drawer.Navigator>
-  );
-}
-
-export default function Rotas() {
-  return (
-
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Main" screenOptions={{ headerShown: false }}>
+      <Stack.Navigator initialRouteName="Loading" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Loading" component={Loading} />
-        <Stack.Screen name="Main" component={DrawerScreens} />
+        <Stack.Screen name="Bem_Vindo1" component={Bem_Vindo1} />
+        <Stack.Screen name="Bem_Vindo2" component={Bem_Vindo2} />
+        <Stack.Screen name="Bem_Vindo3" component={Bem_Vindo3} />
+        <Stack.Screen name="Login" component={Login} />
+        <Stack.Screen name="EsqueciSenha" component={EsqueciSenha} />
+        <Stack.Screen name="TipoCadastro" component={TipoCadastro} />
+        <Stack.Screen name="CadastroUsuario" component={CadastroUsuario} />
+        <Stack.Screen name="CadastroUsuario2" component={CadastroUsuario2} />
+        <Stack.Screen name="CadastroEmpresa" component={CadastroEmpresa} />
+        <Stack.Screen name="CadastroEmpresa2" component={CadastroEmpresa2} />
+        <Stack.Screen name="CadastroClinica" component={CadastroClinica} />
+        <Stack.Screen name="CadastroClinica2" component={CadastroClinica2} />
+        <Stack.Screen name="TelasUsuario" component={TelasUsuario} />
+        <Stack.Screen name="Home" component={Home} />
+        <Stack.Screen name="Carrinho" component={Carrinho} />
+        <Stack.Screen name="FormasCompra" component={FormasCompra} />
+        <Stack.Screen name="Loja" component={Loja} />
+        <Stack.Screen name="FiltroLoja" component={FiltroLoja} />
+        <Stack.Screen name="Consultas" component={Consultas} />
+        <Stack.Screen name="FiltroConsultas" component={FiltroConsultas} />
+        <Stack.Screen name="MinhasConsultas" component={MinhasConsultas} />
+        <Stack.Screen name="CancelarConsulta" component={CancelarConsulta} />
+        <Stack.Screen name="Perfil" component={Perfil} />
+        <Stack.Screen name="Seguro" component={Seguro} />
+        <Stack.Screen name="PoliticaPrivacidade" component={PoliticaPrivacidade} />
+        <Stack.Screen name="Suporte" component={Suporte} />
+        <Stack.Screen name="Configuracoes" component={Configuracoes} />
+        <Stack.Screen name="PerguntasFrequentes" component={PerguntasFrequentes} />
+        <Stack.Screen name="SplashEmocoes" component={SplashEmocoes} />
+        <Stack.Screen name="Emocoes" component={Emocoes} />
+        <Stack.Screen name="Humores" component={Humores} />
+        <Stack.Screen name="Chat" component={Chat} />
+        <Stack.Screen name="Conversa" component={Conversa} />
+        <Stack.Screen name="Profile" component={Profile} />
+        <Stack.Screen name="DadosProtese" component={DadosProtese} />
+        <Stack.Screen name="AdicionarProtese" component={AdicionarProtese} />
+        <Stack.Screen name="DadosClieEmp" component={DadosClieEmp} />
+        <Stack.Screen name="VisualizarCE" component={VisualizarCE} />
+        <Stack.Screen name="AgendamentoCE" component={AgendamentoCE} />
+        <Stack.Screen name="SucessoConsulta" component={SucessoConsulta} />
+        <Stack.Screen name="FalhaConsulta" component={FalhaConsulta} />
+        <Stack.Screen name="AvaliarCE" component={AvaliarCE} />
+        <Stack.Screen name="TelasCE" component={TelasCE} />
+        <Stack.Screen name="HomeCE" component={HomeCE} />
+        <Stack.Screen name="PerguntasFreqCE" component={PerguntasFreqCE} />
+        <Stack.Screen name="ConfiguracoesCE" component={ConfiguracoesCE} />
+        <Stack.Screen name="SuporteCE" component={SuporteCE} />
+        <Stack.Screen name="PoliticaPrivCE" component={PoliticaPrivCE} />
+        <Stack.Screen name="ConsultasCE" component={ConsultasCE} />
+        <Stack.Screen name="ChatCE" component={ChatCE} />
+        <Stack.Screen name="ConversaCE" component={ConversaCE} />
       </Stack.Navigator>
     </NavigationContainer>
   );
 }
-
