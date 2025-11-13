@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AntDesign, FontAwesome } from '@expo/vector-icons';
 import { Eye, EyeOff } from 'lucide-react-native';
 import { getResponsiveSizes } from '../../Style/Responsive';
+
 import { registerClinica } from '../../firebaseServices/authFirebase';
 
 export default function CadastroClinica2Screen() {

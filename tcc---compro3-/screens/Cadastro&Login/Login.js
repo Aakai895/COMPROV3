@@ -12,7 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import { 
   loginUser, 
   loginEmpresa, 
-  loginClinica 
+  loginClinica,
 } from '../../firebaseServices';
 
 export default function LoginScreen() { 

@@ -10,6 +10,7 @@ import { AntDesign, FontAwesome } from '@expo/vector-icons';
 import { Eye, EyeOff } from 'lucide-react-native';
 import { getResponsiveSizes } from '../../Style/Responsive';
 import { useRoute } from '@react-navigation/native';
+
 import { registerEmpresa } from '../../firebaseServices/authFirebase';
 
 export default function CadastroEmpresaScreen() {
