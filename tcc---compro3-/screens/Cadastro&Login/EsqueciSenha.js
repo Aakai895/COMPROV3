@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
-import { simplePasswordReset, updateUserPassword } from '../../services/AuthFirebase';
+import { simplePasswordReset, updateUserPassword } from '../../firebase/authFirebase';
 
 export default function EsqueciSenhaScreen() {
   const navigation = useNavigation();

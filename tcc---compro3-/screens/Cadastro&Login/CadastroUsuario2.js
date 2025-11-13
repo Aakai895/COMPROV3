@@ -13,7 +13,7 @@ import CadastroFundo from '../../Style/Backgrounds/CadUsuario_Fundo';
 import { getResponsiveSizes } from '../../Style/Responsive';
 import { Picker } from '@react-native-picker/picker';
 import { useRoute } from '@react-navigation/native';
-import { registerUser } from '../../services/AuthFirebase';
+import { registerUser } from '../../firebase/authFirebase';
 
 export default function CadastroUsuario2() {
   const navigation = useNavigation();

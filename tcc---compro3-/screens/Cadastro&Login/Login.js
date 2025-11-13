@@ -13,7 +13,7 @@ import {
   loginUser, 
   loginEmpresa, 
   loginClinica 
-} from '../../services/AuthFirebase';
+} from '../../firebase/authFirebase';
 
 export default function LoginScreen() { 
   const navigation = useNavigation();
