@@ -3,33 +3,53 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCxe-O2bdQ19Yo8N1Rqf_2eJpfUIk9LnTE",
-  authDomain: "compro-d8507.firebaseapp.com",
-  databaseURL: "https://compro-d8507-default-rtdb.firebaseio.com",
-  projectId: "compro-d8507",
-  storageBucket: "compro-d8507.firebasestorage.app",
-  messagingSenderId: "378462570464",
-  appId: "1:378462570464:web:75f4e635890685e234cd85"
+  apiKey: "AIzaSyDHiKtYvtGunTxOcflsPzJ9GfwQeCbm4ao",
+
+  authDomain: "compro-us.firebaseapp.com",
+
+  databaseURL: "https://compro-us-default-rtdb.firebaseio.com",
+
+  projectId: "compro-us",
+
+  storageBucket: "compro-us.firebasestorage.app",
+
+  messagingSenderId: "125140115870",
+
+  appId: "1:125140115870:web:938c0d9eba98bf0f84768f"
+
 };
 
 const firebaseCLIConfig= {
-  apiKey: "AIzaSyCqScXA_H8xl63hd9UUxLdt1ho2TNJ47_8",
-  authDomain: "comproclinica-3b64c.firebaseapp.com",
-  databaseURL: "https://comproclinica-3b64c-default-rtdb.firebaseio.com",
-  projectId: "comproclinica-3b64c",
-  storageBucket: "comproclinica-3b64c.firebasestorage.app",
-  messagingSenderId: "383325628727",
-  appId: "1:383325628727:web:f2128f75103b6716b6d2b2"
+  apiKey: "AIzaSyBe9wx45uZcOLJde5tnTvGFvK0wsX56CGU",
+
+  authDomain: "compro-cli.firebaseapp.com",
+
+  databaseURL: "https://compro-cli-default-rtdb.firebaseio.com",
+
+  projectId: "compro-cli",
+
+  storageBucket: "compro-cli.firebasestorage.app",
+
+  messagingSenderId: "235790622556",
+
+  appId: "1:235790622556:web:e2eec3b06b27cd8dbf6b99"
+
 };
 
 const firebaseEMPConfig= {
-  apiKey: "AIzaSyCvH7CNe-iEg-Mymfj_QL6hM7ioIefKYFA",
-  authDomain: "comproem-f38d3.firebaseapp.com",
-  databaseURL: "https://comproem-f38d3-default-rtdb.firebaseio.com",
-  projectId: "comproem-f38d3",
-  storageBucket: "comproem-f38d3.firebasestorage.app",
-  messagingSenderId: "230361686459",
-  appId: "1:230361686459:web:b1609176fe81d20f02a49e"
+  apiKey: "AIzaSyCrt1bFQBDd6_MuiXlg-IehzXmBYqsC49c",
+
+  authDomain: "compro-emp.firebaseapp.com",
+
+  databaseURL: "https://compro-emp-default-rtdb.firebaseio.com",
+
+  projectId: "compro-emp",
+
+  storageBucket: "compro-emp.firebasestorage.app",
+
+  messagingSenderId: "1097391045132",
+
+  appId: "1:1097391045132:web:47da38fbb7c91bc05c0c29"
 };
 
 const appUsuarios =
