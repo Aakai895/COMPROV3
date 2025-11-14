@@ -4,7 +4,6 @@ import { View, Text, Image, Platform, TouchableNativeFeedback,
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useNavigation, useNavigationState } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import HomeScreen from './Home';
 import Loja from './Loja';
@@ -39,13 +38,14 @@ const Header = () => {
   if (!fontsLoaded) return null;
 
   return (
-    <View style={[ styles.headerContainer, { 
-      backgroundColor: isEmocoes ? '#000' : '#fff' 
-      },]}
-    >
+    <View style={[
+      styles.headerContainer,
+      { backgroundColor: isEmocoes ? '#000' : '#fff' }
+    ]}>
       <TouchableWithoutFeedback onPress={() => navigation.navigate('Carrinho')}>
         <View style={[styles.cartButton, { backgroundColor: '#fff' }]}>
-          <Image source={require('../../assets/icones/Carrinho_Verde.png')}
+          <Image
+            source={require('../../assets/icones/Carrinho_Verde.png')}
             style={styles.cartIcon}
             resizeMode="contain"
           />
@@ -53,14 +53,15 @@ const Header = () => {
       </TouchableWithoutFeedback>
 
       <View style={styles.centerContent}>
-        <Image source={require('../../assets/Logo.png')}
+        <Image
+          source={require('../../assets/Logo.png')}
           style={styles.logo}
           resizeMode="contain"
         />
-        <Text style={[ styles.headerText, { 
-          color: isEmocoes ? '#fff' : '#000' 
-          },]}
-        >
+        <Text style={[
+          styles.headerText,
+          { color: isEmocoes ? '#fff' : '#000' }
+        ]}>
           COMPRO
         </Text>
       </View>
@@ -114,10 +115,10 @@ const CustomTabButton = (props) => {
         onPressIn={() => setPressed(true)}
         onPressOut={() => setPressed(false)}
       >
-        <View style={[ styles.tabButtonContainer, {
-          backgroundColor: pressed ? 'rgba(255,255,255,0.3)': 'transparent',
-          },]}
-        >
+        <View style={[
+          styles.tabButtonContainer,
+          { backgroundColor: pressed ? 'rgba(255,255,255,0.3)' : 'transparent' }
+        ]}>
           {props.children}
         </View>
       </TouchableWithoutFeedback>
@@ -125,43 +126,13 @@ const CustomTabButton = (props) => {
   }
 };
 
-const EmocoesTabButton = (props) => {
-  const navigation = useNavigation();
-
-  const handlePress = async () => {
-    const seen = await AsyncStorage.getItem('@emocoes_splash_seen');
-    if (seen === 'true') {
-      props.onPress();
-    } else {
-      navigation.navigate('SplashEmocoes');
-    }
-  };
-
-  return <CustomTabButton {...props} onPress={handlePress} />;
-};
-
-export default function BottomTabs() {
-  const currentRouteName = useNavigationState((state) => {
-    if (!state) return null;
-    const getActive = (s) => {
-      if (!s || !s.routes || s.routes.length === 0) return null;
-      const index = typeof s.index === 'number' ? s.index : s.routes.length - 1;
-      const route = s.routes[index];
-      if (route.state) return getActive(route.state);
-      return route.name;
-    };
-    return getActive(state);
-  });
-
-  const isEmocoes =
-    currentRouteName === 'Emoções' || currentRouteName === 'Emocoes';
+export default function TelasUsuario() {
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: isEmocoes ? '#000' : '#fff' }}>
-      <Header />
+    <SafeAreaView style={{ flex: 1 }}>
       <Tab.Navigator
         screenOptions={({ route }) => ({
-          headerShown: false,
+          header: () => <Header />, // AGORA O HEADER ESTÁ AQUI (correto!!)
           tabBarStyle: styles.tabBar,
           tabBarLabelStyle: styles.tabLabel,
           tabBarIcon: ({ focused }) => {
@@ -169,7 +140,8 @@ export default function BottomTabs() {
               ? icons[route.name].active
               : icons[route.name].inactive;
             return (
-              <Image source={iconSource}
+              <Image
+                source={iconSource}
                 style={styles.icon}
                 resizeMode="contain"
               />
@@ -182,32 +154,44 @@ export default function BottomTabs() {
         <Tab.Screen
           name="Home"
           component={HomeScreen}
-          options={{ tabBarButton: (props) => <CustomTabButton {...props} /> }}
+          options={{
+            tabBarButton: (props) => <CustomTabButton {...props} />,
+          }}
         />
         <Tab.Screen
           name="Loja"
           component={Loja}
-          options={{ tabBarButton: (props) => <CustomTabButton {...props} /> }}
+          options={{
+            tabBarButton: (props) => <CustomTabButton {...props} />,
+          }}
         />
         <Tab.Screen
           name="Consultas"
           component={Consultas}
-          options={{ tabBarButton: (props) => <CustomTabButton {...props} /> }}
+          options={{
+            tabBarButton: (props) => <CustomTabButton {...props} />,
+          }}
         />
         <Tab.Screen
           name="Emoções"
           component={Emocoes}
-          options={{ tabBarButton: (props) => <EmocoesTabButton {...props} /> }}
+          options={{
+            tabBarButton: (props) => <CustomTabButton {...props} />,
+          }}
         />
         <Tab.Screen
-           name="Chat"
-            component={Chat}
-            options={{ tabBarButton: (props) => <CustomTabButton {...props} /> }}
+          name="Chat"
+          component={Chat}
+          options={{
+            tabBarButton: (props) => <CustomTabButton {...props} />,
+          }}
         />
         <Tab.Screen
           name="Perfil"
           component={Perfil}
-          options={{ tabBarButton: (props) => <CustomTabButton {...props} /> }}
+          options={{
+            tabBarButton: (props) => <CustomTabButton {...props} />,
+          }}
         />
       </Tab.Navigator>
     </SafeAreaView>
@@ -220,8 +204,6 @@ const styles = {
     height: 60,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    marginTop: 35,
   },
   centerContent: {
     flexDirection: 'row',
@@ -233,7 +215,6 @@ const styles = {
   },
   headerText: {
     fontSize: 20,
-    color: '#000',
     fontFamily: 'Findel',
   },
   cartButton: {

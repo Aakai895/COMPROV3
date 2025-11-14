@@ -185,10 +185,10 @@ export default function LoginScreen() {
       // NAVEGAÇÃO DIRETA - conforme sua solicitação
       if (userType === 'paciente') {
         // PACIENTE → Home
-        navigation.navigate('Home');
+        navigation.navigate('TelasUsuario', { screen: 'Home' });
       } else {
         // EMPRESA ou CLÍNICA → HomeCE  
-        navigation.navigate('HomeCE');
+        navigation.navigate('TelasCE', { screen: 'HomeCE' });
       }
 
     } catch (error) {
