@@ -111,15 +111,15 @@ export default function LoginScreen() {
       // 3. NAVEGAÇÃO ESPECÍFICA CONFORME O TIPO
       if (userType === 'paciente') {
         console.log('🎯 Navegando para HOME (Paciente)');
-        navigation.navigate('TelasUsuario'); 
+        navigation.navigate('TelasUsuario', { screen: 'Home' }); 
         
       } else if (userType === 'empresa' || userType === 'clinica') {
         console.log('🎯 Navegando para HOME CE (Empresa/Clínica)');
-        navigation.navigate('TelasCE'); 
+        navigation.navigate('TelasCE', { screen: 'HomeCE' }); 
         
       } else {
         console.log('❓ Tipo desconhecido, indo para Home geral');
-        navigation.navigate('Home');
+        navigation.navigate('TelasUsuario');
       }
 
       // Mensagem de boas-vindas
