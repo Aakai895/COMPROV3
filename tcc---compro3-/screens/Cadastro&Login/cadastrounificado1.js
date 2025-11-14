@@ -21,10 +21,13 @@ export default function CadastroTipoScreen() {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const animatedOffset = useRef(new Animated.Value(0)).current;
   
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Alice: require('../../fonts/Alice-Regular.ttf'),
     Findel: require('../../fonts/Findel-Display-Regular.otf'),
   });
+
+  // Verificar se as fontes carregaram ou se houve erro
+  const fontsReady = fontsLoaded || fontError;
 
   useEffect(() => {
     const onShow = (e) => {
@@ -38,6 +41,7 @@ export default function CadastroTipoScreen() {
         friction: 12,
       }).start();
     };
+    
     const onHide = () => {
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setKeyboardHeight(0);
@@ -48,10 +52,12 @@ export default function CadastroTipoScreen() {
         friction: 12,
       }).start();
     };
+    
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
     const showListener = Keyboard.addListener(showEvent, onShow);
     const hideListener = Keyboard.addListener(hideEvent, onHide);
+    
     return () => {
       showListener.remove();
       hideListener.remove();
@@ -65,22 +71,37 @@ export default function CadastroTipoScreen() {
   const iconColor = keyboardVisible ? '#fff' : '#aaa';
 
   const handleProximo = () => {
-    if (!nome || !email) {
-      alert('Preencha nome e email para continuar.');
+    if (!nome.trim() || !email.trim()) {
+      Alert.alert('Atenção', 'Preencha nome e email para continuar.');
+      return;
+    }
+
+    // Validação básica de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Atenção', 'Por favor, insira um email válido.');
       return;
     }
 
     const dadosTela1 = {
       tipoUsuario,
-      nome,
-      email,
-      telefone
+      nome: nome.trim(),
+      email: email.trim().toLowerCase(),
+      telefone: telefone.trim()
     };
 
+    console.log('Navegando para Cadastro2 com dados:', dadosTela1);
     navigation.navigate('Cadastrouni2', { dadosTela1 });
   };
 
-  if (!fontsLoaded) return null;
+  // Se as fontes não carregaram ainda, mostrar tela vazia
+  if (!fontsReady) {
+    return (
+      <View style={styles.wrapper}>
+        <CadastroFundo />
+      </View>
+    );
+  }
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -92,20 +113,31 @@ export default function CadastroTipoScreen() {
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={[styles.backButton, { top: insets.top + 10 }]}
+          activeOpacity={0.7}
         >
           <Image
             source={keyboardVisible ? require('../../assets/icones/SetaVoltarBranca.png') : require('../../assets/icones/SetaVoltar.png')}
-            style={[styles.backIcon, keyboardVisible ? undefined : { tintColor: '#000' }]}
+            style={[
+              styles.backIcon, 
+              keyboardVisible ? undefined : { tintColor: '#000' }
+            ]}
             resizeMode="contain"
           />
         </TouchableOpacity>
 
-        <View style={{ alignItems: 'center', marginTop: keyboardVisible ? 10 : height * 0.08 }}>
+        <View style={{ 
+          alignItems: 'center', 
+          marginTop: keyboardVisible ? 10 : height * 0.08 
+        }}>
           {!keyboardVisible && (
             <>
               <Image
                 source={require('../../assets/Logo.png')}
-                style={{ width: logoWidth, height: logoHeight, resizeMode: 'contain' }}
+                style={{ 
+                  width: logoWidth, 
+                  height: logoHeight, 
+                  resizeMode: 'contain' 
+                }}
               />
               <Text style={styles.gratidao}>
                 Vamos começar seu cadastro!{'\n'}Escolha o tipo de conta.
@@ -123,6 +155,7 @@ export default function CadastroTipoScreen() {
             },
           ]}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
           <View style={styles.headerWrapper}>
             <Text style={styles.tituloShadow}>Cadastro</Text>
@@ -138,7 +171,8 @@ export default function CadastroTipoScreen() {
               selectedValue={tipoUsuario}
               style={[styles.picker, { color: textColor }]}
               dropdownIconColor={iconColor}
-              onValueChange={setTipoUsuario}
+              onValueChange={(itemValue) => setTipoUsuario(itemValue)}
+              mode="dropdown"
             >
               <Picker.Item label="Paciente" value="paciente" />
               <Picker.Item label="Empresa" value="empresa" />
@@ -155,6 +189,8 @@ export default function CadastroTipoScreen() {
             placeholderTextColor={placeholderColor}
             value={nome}
             onChangeText={setNome}
+            returnKeyType="next"
+            autoCapitalize="words"
           />
 
           <Text style={[styles.label, { color: textColor }]}>
@@ -168,6 +204,8 @@ export default function CadastroTipoScreen() {
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
+            returnKeyType="next"
+            autoComplete="email"
           />
 
           <Text style={[styles.label, { color: textColor }]}>Telefone</Text>
@@ -178,6 +216,7 @@ export default function CadastroTipoScreen() {
             value={telefone}
             onChangeText={setTelefone}
             keyboardType="phone-pad"
+            returnKeyType="done"
           />
 
           <TouchableOpacity
@@ -189,11 +228,15 @@ export default function CadastroTipoScreen() {
                 paddingVertical: buttonPaddingV,
               }
             ]}
+            activeOpacity={0.7}
           >
             <Text style={styles.loginTextButton}>Próximo</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+          <TouchableOpacity 
+            onPress={() => navigation.navigate('Login')}
+            activeOpacity={0.7}
+          >
             <Text style={styles.registerText}>
               Já possui uma conta? <Text style={styles.cadastroBold}>Logar</Text>
             </Text>
@@ -202,11 +245,17 @@ export default function CadastroTipoScreen() {
           <Text style={styles.orText}>Ou continue com</Text>
 
           <View style={styles.socialContainer}>
-            <TouchableOpacity style={styles.socialButton}>
+            <TouchableOpacity 
+              style={styles.socialButton}
+              activeOpacity={0.7}
+            >
               <AntDesign name="google" size={dotSize * 4} color="#787876" />
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.socialButton}>
+            <TouchableOpacity 
+              style={styles.socialButton}
+              activeOpacity={0.7}
+            >
               <FontAwesome name="apple" size={dotSize * 4} color="#787876" />
             </TouchableOpacity>
           </View>
@@ -219,7 +268,10 @@ export default function CadastroTipoScreen() {
 const INPUT_HEIGHT = 45;
 
 const styles = StyleSheet.create({
-  wrapper: { flex: 1, backgroundColor: '#fff' },
+  wrapper: { 
+    flex: 1, 
+    backgroundColor: '#fff' 
+  },
   backButton: {
     position: 'absolute',
     left: 20,
@@ -235,8 +287,12 @@ const styles = StyleSheet.create({
     color: '#000',
     fontFamily: 'Alice',
     marginVertical: 10,
+    fontSize: 16,
+    lineHeight: 22,
   },
-  scrollContainer: { paddingHorizontal: 30 },
+  scrollContainer: { 
+    paddingHorizontal: 30 
+  },
   headerWrapper: {
     alignItems: 'center',
     alignSelf: 'center',
@@ -263,6 +319,7 @@ const styles = StyleSheet.create({
     color: '#44615f',
     fontFamily: 'Findel',
     textAlign: 'center',
+    marginTop: 5,
   },
   label: {
     fontFamily: 'Alice',
@@ -284,6 +341,7 @@ const styles = StyleSheet.create({
   picker: {
     height: INPUT_HEIGHT,
     fontFamily: 'Alice',
+    fontSize: 14,
   },
   loginButton: {
     alignSelf: 'center',
@@ -293,16 +351,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
+    backgroundColor: 'rgba(165, 195, 167, 0.3)',
   },
   loginTextButton: {
     color: '#fff',
     fontFamily: 'Alice',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   registerText: {
     textAlign: 'center',
     color: '#fff',
     fontFamily: 'Alice',
     marginBottom: 10,
+    fontSize: 14,
   },
   cadastroBold: {
     fontWeight: 'bold',
@@ -314,6 +376,7 @@ const styles = StyleSheet.create({
     color: '#aaa',
     fontFamily: 'Alice',
     marginVertical: 10,
+    fontSize: 14,
   },
   socialContainer: {
     flexDirection: 'row',
@@ -327,5 +390,13 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
 });

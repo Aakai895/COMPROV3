@@ -13,10 +13,19 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebaseServices/firebaseConfig';
 
+// Definir estadosECidades fora do componente para evitar problemas de escopo
+const estadosECidades = {
+  SP: ['São Paulo', 'Osasco', 'Taboão da Serra', 'Embu das Artes', 'Cotia'],
+  RJ: ['Rio de Janeiro', 'Niterói', 'Duque de Caxias', 'Nova Iguaçu'],
+  MG: ['Belo Horizonte', 'Uberlândia', 'Contagem', 'Juiz de Fora'],
+  BA: ['Salvador', 'Feira de Santana', 'Vitória da Conquista', 'Camaçari'],
+  RS: ['Porto Alegre', 'Caxias do Sul', 'Pelotas', 'Santa Maria'],
+};
+
 export default function CadastroDadosScreen() {
   const navigation = useNavigation();
   const route = useRoute();
-  const { dadosTela1 } = route.params;
+  const { dadosTela1 } = route.params || {};
   
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
@@ -35,7 +44,7 @@ export default function CadastroDadosScreen() {
   const [afe, setAfe] = useState('');
   const [especialidades, setEspecialidades] = useState('');
   const [estado, setEstado] = useState('SP');
-  const [cidade, setCidade] = useState('');
+  const [cidade, setCidade] = useState(estadosECidades.SP[0]); // Inicializar com valor válido
   const [endereco, setEndereco] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
 
@@ -47,13 +56,10 @@ export default function CadastroDadosScreen() {
     Findel: require('../../fonts/Findel-Display-Regular.otf'),
   });
 
-  const estadosECidades = {
-    SP: ['São Paulo', 'Osasco', 'Taboão da Serra', 'Embu das Artes', 'Cotia'],
-    RJ: ['Rio de Janeiro', 'Niterói', 'Duque de Caxias', 'Nova Iguaçu'],
-    MG: ['Belo Horizonte', 'Uberlândia', 'Contagem', 'Juiz de Fora'],
-    BA: ['Salvador', 'Feira de Santana', 'Vitória da Conquista', 'Camaçari'],
-    RS: ['Porto Alegre', 'Caxias do Sul', 'Pelotas', 'Santa Maria'],
-  };
+  useEffect(() => {
+    console.log("Estado:", estado);
+    console.log("Cidade:", cidade);
+  }, [estado, cidade]);
 
   useEffect(() => {
     const onShow = (e) => {
@@ -67,6 +73,7 @@ export default function CadastroDadosScreen() {
         friction: 12,
       }).start();
     };
+    
     const onHide = () => {
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setKeyboardHeight(0);
@@ -77,15 +84,25 @@ export default function CadastroDadosScreen() {
         friction: 12,
       }).start();
     };
+    
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
     const showListener = Keyboard.addListener(showEvent, onShow);
     const hideListener = Keyboard.addListener(hideEvent, onHide);
+    
     return () => {
       showListener.remove();
       hideListener.remove();
     };
   }, [animatedOffset]);
+
+  const handleEstadoChange = (value) => {
+    setEstado(value);
+    // Atualizar cidade para o primeiro valor do novo estado
+    if (estadosECidades[value] && estadosECidades[value].length > 0) {
+      setCidade(estadosECidades[value][0]);
+    }
+  };
 
   const keyboardVisible = keyboardHeight > 0;
   const textColor = keyboardVisible ? '#fff' : '#aaa';
@@ -96,7 +113,7 @@ export default function CadastroDadosScreen() {
   const handleCadastrar = async () => {
     console.log('🎯 SALVANDO EM COLETAS ESPECÍFICAS...');
     
-    // Validações
+    // Validações básicas
     if (!senha || !confirmarSenha) {
       alert('Preencha a senha e confirmação.');
       return;
@@ -104,6 +121,11 @@ export default function CadastroDadosScreen() {
 
     if (senha !== confirmarSenha) {
       alert('As senhas não coincidem!');
+      return;
+    }
+
+    if (!dadosTela1) {
+      alert('Dados da tela anterior não encontrados.');
       return;
     }
 
@@ -232,8 +254,6 @@ export default function CadastroDadosScreen() {
 
       console.log('✅ DADOS SALVOS EM DUAS COLETAS!');
       
-      // VOLTAR PARA O LOGIN
-      console.log('🎯 Voltando para tela de login...');
       Alert.alert(
         'Sucesso!', 
         'Cadastro realizado com sucesso! Faça login para continuar.',
@@ -274,7 +294,17 @@ export default function CadastroDadosScreen() {
     return idade;
   }
 
+  function formatarData(date) {
+    if (!date) return '';
+    const dia = String(date.getDate()).padStart(2, '0');
+    const mes = String(date.getMonth() + 1).padStart(2, '0');
+    const ano = date.getFullYear();
+    return `${dia}/${mes}/${ano}`;
+  }
+
   const renderCamposEspecificos = () => {
+    if (!dadosTela1) return null;
+
     switch(dadosTela1.tipoUsuario) {
       case 'paciente':
         return (
@@ -404,10 +434,7 @@ export default function CadastroDadosScreen() {
                     selectedValue={estado}
                     style={[styles.picker, { color: textColor }]}
                     dropdownIconColor={iconColor}
-                    onValueChange={(value) => {
-                      setEstado(value);
-                      setCidade(estadosECidades[value][0]);
-                    }}
+                    onValueChange={handleEstadoChange}
                   >
                     {Object.keys(estadosECidades).map((estadoKey) => (
                       <Picker.Item key={estadoKey} label={estadoKey} value={estadoKey} />
@@ -448,14 +475,6 @@ export default function CadastroDadosScreen() {
         return null;
     }
   };
-
-  function formatarData(date) {
-    if (!date) return '';
-    const dia = String(date.getDate()).padStart(2, '0');
-    const mes = String(date.getMonth() + 1).padStart(2, '0');
-    const ano = date.getFullYear();
-    return `${dia}/${mes}/${ano}`;
-  }
 
   if (!fontsLoaded) return null;
 
@@ -505,8 +524,8 @@ export default function CadastroDadosScreen() {
             <Text style={styles.tituloShadow}>Cadastro</Text>
             <Text style={styles.tituloText}>Cadastro</Text>
             <Text style={styles.tipoText}>
-              {dadosTela1.tipoUsuario === 'paciente' ? 'Dados Pessoais' : 
-               dadosTela1.tipoUsuario === 'empresa' ? 'Dados da Empresa' : 'Dados da Clínica'}
+              {dadosTela1?.tipoUsuario === 'paciente' ? 'Dados Pessoais' : 
+               dadosTela1?.tipoUsuario === 'empresa' ? 'Dados da Empresa' : 'Dados da Clínica'}
             </Text>
           </View>
 
@@ -525,11 +544,11 @@ export default function CadastroDadosScreen() {
               onChangeText={setSenha}
             />
             <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)}>
-  {passwordVisible ? 
-    <Ionicons name="eye-off" color={iconColor} size={25} /> : 
-    <Ionicons name="eye" color={iconColor} size={25} />
-  }
-</TouchableOpacity>
+              {passwordVisible ? 
+                <Ionicons name="eye-off" color={iconColor} size={25} /> : 
+                <Ionicons name="eye" color={iconColor} size={25} />
+              }
+            </TouchableOpacity>
           </View>
 
           <Text style={[styles.label, { color: textColor }]}>
@@ -544,12 +563,12 @@ export default function CadastroDadosScreen() {
               value={confirmarSenha}
               onChangeText={setConfirmarSenha}
             />
-            <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)}>
-  {passwordVisible ? 
-    <Ionicons name="eye-off" color={iconColor} size={25} /> : 
-    <Ionicons name="eye" color={iconColor} size={25} />
-  }
-</TouchableOpacity>
+            <TouchableOpacity onPress={() => setConfirmPasswordVisible(!confirmPasswordVisible)}>
+              {confirmPasswordVisible ? 
+                <Ionicons name="eye-off" color={iconColor} size={25} /> : 
+                <Ionicons name="eye" color={iconColor} size={25} />
+              }
+            </TouchableOpacity>
           </View>
 
           {showDatePicker && (
@@ -704,3 +723,4 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
+
