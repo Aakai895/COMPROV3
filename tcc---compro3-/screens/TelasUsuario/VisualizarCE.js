@@ -237,8 +237,8 @@ export default function DetalhesClinica() {
 
   return (
     <View style={styles.screen}>
-      <View style={ styles.headerContainer }>
-         <Image
+      <View style={styles.headerContainer}>
+        <Image
           source={image}
           style={styles.mainImage}
         />
@@ -252,70 +252,73 @@ export default function DetalhesClinica() {
         </TouchableWithoutFeedback>
       </View>
 
-      <View style={styles.card}>
-        <View style={styles.avaliacaoTrapezio}>
-          <Image
-            source={require('../../assets/Elementos_Complementares/FundoEstrela.png')}
-            style={{ width: widthTop, height }}
-            resizeMode="stretch"
-          />
+      {/* MUDANÇA PRINCIPAL: ScrollView principal engloba todo o conteúdo */}
+      <ScrollView 
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.card}>
+          <View style={styles.avaliacaoTrapezio}>
+            <Image
+              source={require('../../assets/Elementos_Complementares/FundoEstrela.png')}
+              style={{ width: widthTop, height }}
+              resizeMode="stretch"
+            />
 
-          <View style={[styles.starsContainer, { width: widthTop, height }]}>
-            <View style={styles.ratingStarsContainer}>
-              {renderStars(avaliacao)}
+            <View style={[styles.starsContainer, { width: widthTop, height }]}>
+              <View style={styles.ratingStarsContainer}>
+                {renderStars(avaliacao)}
+              </View>
             </View>
           </View>
-        </View>
 
-        <View style={styles.headerInfoRow}>
-          <Text style={styles.name}>{name}</Text>
-          <Text style={styles.numAvaliacaoText}>
-             {`(${numAvaliacao >= 500 ? numAvaliacao + '+' : numAvaliacao} Avaliações)`}
+          <View style={styles.headerInfoRow}>
+            <Text style={styles.name}>{name}</Text>
+            <Text style={styles.numAvaliacaoText}>
+              {`(${numAvaliacao >= 500 ? numAvaliacao + '+' : numAvaliacao} Avaliações)`}
+            </Text>
+          </View>
+
+          <Text style={styles.especialidadesText}>
+            {especialidades.join(', ')}
           </Text>
-        </View>
 
-        <Text style={styles.especialidadesText}>
-          {especialidades.join(', ')}
-        </Text>
+          <View style={styles.divider} />
 
-        <View style={styles.divider} />
+          <View style={styles.infoCard}>
+            <View style={styles.infoRow}>
+              <Image source={require('../../assets/icones/LocationBranco.png')} style={styles.smallIcon} />
+              <Text style={styles.infoText}>{addressText}</Text>
+            </View>
 
-        <View style={styles.infoCard}>
-          <View style={styles.infoRow}>
-            <Image source={require('../../assets/icones/LocationBranco.png')} style={styles.smallIcon} />
-            <Text style={styles.infoText}>{addressText}</Text>
+            <View style={styles.infoRow}>
+              <Image source={require('../../assets/icones/Relogio.png')} style={styles.smallIcon} />
+              <Text style={styles.infoText}>{infoText}</Text>
+            </View>
           </View>
 
-          <View style={styles.infoRow}>
-            <Image source={require('../../assets/icones/Relogio.png')} style={styles.smallIcon} />
-            <Text style={styles.infoText}>{infoText}</Text>
+          <View style={styles.navTabs}>
+            <View style={{ flexDirection: 'row', flex: 1 }}>
+              {['Especialidades', 'Avaliacoes', 'SobreNos'].map(tab => (
+                <TouchableOpacity
+                  key={tab}
+                  onPress={() => setAbaAtiva(tab)}
+                  style={[
+                    styles.tabItem,
+                    abaAtiva === tab && styles.activeTabItem
+                  ]}
+                >
+                  <Text style={[styles.tabText, abaAtiva === tab && styles.activeTabText]}>
+                    {tab === 'Avaliacoes' ? 'Avaliações' : tab === 'SobreNos' ? 'Contato/Sobre Nós' : 'Especialidades'}
+                  </Text>
+                  {abaAtiva === tab && <View style={styles.trapezio} />}
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
-        </View>
 
-        <View style={styles.navTabs}>
-          <View style={{ flexDirection: 'row', flex: 1 }}>
-            {['Especialidades', 'Avaliacoes', 'SobreNos'].map(tab => (
-              <TouchableOpacity
-                key={tab}
-                onPress={() => setAbaAtiva(tab)}
-                style={[
-                  styles.tabItem,
-                  abaAtiva === tab && styles.activeTabItem
-                ]}
-              >
-                <Text style={[styles.tabText, abaAtiva === tab && styles.activeTabText]}>
-                  {tab === 'Avaliacoes' ? 'Avaliações' : tab === 'SobreNos' ? 'Contato/Sobre Nós' : 'Especialidades'}
-                </Text>
-                {abaAtiva === tab && <View style={styles.trapezio} />}
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-      </View>
-
-      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }}>
-        <View> 
+          {/* CONTEÚDO DAS ABAS DENTRO DO SCROLLVIEW PRINCIPAL */}
           <View style={styles.tabContent}>
             {abaAtiva === 'Especialidades' && (
               <View>
@@ -331,95 +334,90 @@ export default function DetalhesClinica() {
                   numColumns={2}
                   columnWrapperStyle={styles.columnWrapper}
                   contentContainerStyle={{ paddingBottom: 10 }}
+                  scrollEnabled={false}
                 />
               </View>
             )}
 
             {abaAtiva === 'Avaliacoes' && (
-             <View style={styles.avaliacoesContainer}>
-
-              <TouchableOpacity style={styles.btnAvaliar}
-                onPress={() => navigation.navigate('AvaliarCE', {clinicId: clinic.id})}
-              >
-                <Image
-                  source={require('../../assets/icones/lapisIcon.png')} 
-                  style={styles.btnAvaliarIcon}
-                />
-                <Text style={styles.btnAvaliarText}>Avaliar</Text>
-              </TouchableOpacity>
-
-              <View style={styles.searchBox}>
-                <Image
-                  source={require("../../assets/icones/Lupa3Icon.jpg")}
-                  style={styles.searchIcon}
-                />
-                <TextInput
-                  placeholder="Procurar por avaliações"
-                  style={styles.searchInput}
-                  placeholderTextColor="#8A8A8A"
-                />
-              </View>
-
-              <View style={styles.filtrosContainer}>
-                <TouchableOpacity style={[styles.filtroBtn, styles.filtroTag]}>
+              <View style={styles.avaliacoesContainer}>
+                <TouchableOpacity style={styles.btnAvaliar}
+                  onPress={() => navigation.navigate('AvaliarCE', {clinicId: clinic.id})}
+                >
                   <Image
-                    source={require("../../assets/icones/Filtro2.jpg")}
-                    style={styles.filtroIcon}
-                    resizeMode="contain"
+                    source={require('../../assets/icones/lapisIcon.png')} 
+                    style={styles.btnAvaliarIcon}
                   />
-                  <Text style={styles.filtroTexto}>Filtro</Text>
+                  <Text style={styles.btnAvaliarText}>Avaliar</Text>
+                </TouchableOpacity>
 
+                <View style={styles.searchBox}>
                   <Image
-                    source={require("../../assets/icones/setaBaixa.jpg")}
-                    style={styles.setaIcon}
-                    resizeMode="contain"
+                    source={require("../../assets/icones/Lupa3Icon.jpg")}
+                    style={styles.searchIcon}
                   />
-                </TouchableOpacity>
+                  <TextInput
+                    placeholder="Procurar por avaliações"
+                    style={styles.searchInput}
+                    placeholderTextColor="#8A8A8A"
+                  />
+                </View>
 
-                <TouchableOpacity style={[styles.filtroTag, styles.tagAtivo]}>
-                  <Text style={styles.tagTextoAtivo}>Recentes</Text>
-                </TouchableOpacity>
+                <View style={styles.filtrosContainer}>
+                  <TouchableOpacity style={[styles.filtroBtn, styles.filtroTag]}>
+                    <Image
+                      source={require("../../assets/icones/Filtro2.jpg")}
+                      style={styles.filtroIcon}
+                      resizeMode="contain"
+                    />
+                    <Text style={styles.filtroTexto}>Filtro</Text>
 
-                <TouchableOpacity style={styles.filtroTag}>
-                  <Text style={styles.tagTexto}>Antigos</Text>
-                </TouchableOpacity>
-              </View>
+                    <Image
+                      source={require("../../assets/icones/setaBaixa.jpg")}
+                      style={styles.setaIcon}
+                      resizeMode="contain"
+                    />
+                  </TouchableOpacity>
 
-              <View style={styles.divider2} />
+                  <TouchableOpacity style={[styles.filtroTag, styles.tagAtivo]}>
+                    <Text style={styles.tagTextoAtivo}>Recentes</Text>
+                  </TouchableOpacity>
 
-              <View style={styles.avaliacaoCard}>
-                <Image
-                  source={require("../../assets/Elementos_Complementares/user.jpg")}
-                  style={styles.avatar}
-                /> 
+                  <TouchableOpacity style={styles.filtroTag}>
+                    <Text style={styles.tagTexto}>Antigos</Text>
+                  </TouchableOpacity>
+                </View>
 
-                <View style={{ flex: 1, marginLeft: 12 }}>
+                <View style={styles.divider2} />
 
-                  <View style={styles.nomeLinha}>
-                    <Text style={styles.nomeUsuario}>Rainha do Som</Text>
+                <View style={styles.avaliacaoCard}>
+                  <Image
+                    source={require("../../assets/Elementos_Complementares/user.jpg")}
+                    style={styles.avatar}
+                  /> 
 
-                    <View style={styles.linhaAvaliacao}>
-                      <View style={styles.linhaSuperior}>
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <View style={styles.nomeLinha}>
+                      <Text style={styles.nomeUsuario}>Rainha do Som</Text>
 
-                        <View style={styles.iconeNota}>
-                          <Icon name="star" size={20} color="#FFD700" />
-                          <Text style={styles.ratingBold}>5.0</Text>
+                      <View style={styles.linhaAvaliacao}>
+                        <View style={styles.linhaSuperior}>
+                          <View style={styles.iconeNota}>
+                            <Icon name="star" size={20} color="#FFD700" />
+                            <Text style={styles.ratingBold}>5.0</Text>
+                          </View>
                         </View>
+                        <Text style={styles.tempo}>8 horas atrás</Text>
                       </View>
-
-                      <Text style={styles.tempo}>8 horas atrás</Text>
                     </View>
-                  </View>
 
-                  <Text style={styles.textoAvaliacao}>
-                    AMEI!!!! pedi para adicionarem uma caixinha de som embutida. MUITO BOAAA. 
-                    funciona perfeitamente e não ocorreu nenhum problema.
-                  </Text>
+                    <Text style={styles.textoAvaliacao}>
+                      AMEI!!!! pedi para adicionarem uma caixinha de som embutida. MUITO BOAAA. 
+                      funciona perfeitamente e não ocorreu nenhum problema.
+                    </Text>
+                  </View>
                 </View>
               </View>
-
-            </View>
-
             )}
 
             {abaAtiva === 'SobreNos' && (
@@ -496,8 +494,12 @@ export default function DetalhesClinica() {
             )}
           </View>
         </View>
+
+        {/* ESPAÇO PARA OS BOTÕES NÃO FICAREM SOBREPOSTOS */}
+        <View style={styles.spacer} />
       </ScrollView>
 
+      {/* BOTÕES FIXOS NA PARTE INFERIOR */}
       <View style={styles.agendarContainer}>
         <TouchableOpacity style={styles.agendarButton} 
           onPress={() => navigation.navigate('AgendamentoCE', { clinicId: clinic.id, especialidadesSelecionadas: selecionados })}
@@ -514,6 +516,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff'
   },
+  // NOVOS ESTILOS PARA SCROLL
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  spacer: {
+    height: 80, // Espaço para os botões não sobreporem o conteúdo
+  },
   container: { 
     flex: 1 
   },
@@ -521,7 +533,7 @@ const styles = StyleSheet.create({
     flex: 1, 
     justifyContent: 'center', 
     alignItems: 'center'
-   },
+  },
   card: {
     backgroundColor: '#fff',
     borderTopLeftRadius: 35,
@@ -700,7 +712,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 15,
     resizeMode: 'cover',
   },
-   nomeContainer: {
+  nomeContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-start",
@@ -811,7 +823,7 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
   },
-   avaliacaoCard: {
+  avaliacaoCard: {
     flexDirection: "row",
     padding: 16,
     marginTop: 12,

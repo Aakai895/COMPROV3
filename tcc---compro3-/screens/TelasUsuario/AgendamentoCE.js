@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, ScrollView,
   ActivityIndicator, TouchableOpacity, Dimensions, 
-  Platform, FlatList,
+  Platform, FlatList, Alert
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { getClinicImageById, getImagemEspecialidade } from '../imagensProdutos';
+import { auth, db } from '../../firebaseServices/firebaseConfig';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const { width, height } = Dimensions.get('window');
 
@@ -21,6 +24,7 @@ export default function DetalhesClinica() {
 
   const [clinic, setClinic] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [agendando, setAgendando] = useState(false);
 
   const [dias, setDias] = useState([]);
   const [horarios, setHorarios] = useState([]);
@@ -28,29 +32,22 @@ export default function DetalhesClinica() {
   const [horarioSelecionado, setHorarioSelecionado] = useState(null);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
-  
   const [selecionados, setSelecionados] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // Monitorar usuário logado
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+    });
+    return unsubscribe;
+  }, []);
 
   useEffect(() => {
     if (Array.isArray(especialidadesSelecionadas)) {
       setSelecionados([...especialidadesSelecionadas]);
     }
   }, [especialidadesSelecionadas]);
-
-  useEffect(() => {
-    if (!clinic) return;
-
-    const diasGerados = gerarDias();
-    setDias(diasGerados);
-    setDiaSelecionado(diasGerados[0]);
-
-    const horariosGerados = gerarHorarios(
-      clinic.horarioAtendimento?.início || '08:00',
-      clinic.horarioAtendimento?.fim || '18:00',
-      clinic.intervaloTempoAgendamento || 30
-    );
-    setHorarios(horariosGerados);
-  }, [clinic]);
 
   const toggleSelecionada = (item) => {
     setSelecionados(prev => {
@@ -169,6 +166,7 @@ export default function DetalhesClinica() {
         dia: data.getDate(),
         mes: meses[data.getMonth()],
         completo: data.toISOString().split('T')[0],
+        dataObj: data
       });
     }
 
@@ -209,6 +207,99 @@ export default function DetalhesClinica() {
     setHorarios(horariosGerados);
   }, [clinic]);
 
+  // Função para validar campos
+  const validarCampos = () => {
+    if (!currentUser) {
+      Alert.alert('Erro', 'Você precisa estar logado para agendar uma consulta.');
+      return false;
+    }
+
+    if (!diaSelecionado) {
+      Alert.alert('Atenção', 'Por favor, selecione um dia para a consulta.');
+      return false;
+    }
+
+    if (!horarioSelecionado) {
+      Alert.alert('Atenção', 'Por favor, selecione um horário para a consulta.');
+      return false;
+    }
+
+    if (selecionados.length === 0) {
+      Alert.alert('Atenção', 'Por favor, selecione pelo menos uma especialidade.');
+      return false;
+    }
+
+    return true;
+  };
+
+  // Função para agendar consulta no Firebase
+  const agendarConsulta = async () => {
+    if (!validarCampos()) return;
+
+    setAgendando(true);
+
+    try {
+      // Criar objeto da consulta
+      const consultaData = {
+        userId: currentUser.uid,
+        userEmail: currentUser.email,
+        clinicId: clinic.id,
+        clinicName: clinic.name,
+        especialidades: selecionados,
+        data: diaSelecionado.completo,
+        dataObj: diaSelecionado.dataObj,
+        horario: horarioSelecionado,
+        endereco: `${clinic.addressObj.ruaAvenidaPraca || ''}, ${clinic.addressObj.numero || ''} - ${clinic.addressObj.bairro || ''}`,
+        status: 'agendada',
+        criadoEm: serverTimestamp(),
+        tipo: 'Clínica'
+      };
+
+      // Salvar no Firestore
+      const docRef = await addDoc(collection(db, 'consultas'), consultaData);
+      
+      console.log('Consulta agendada com ID:', docRef.id);
+      
+      // Mostrar mensagem de sucesso
+      Alert.alert(
+        'Sucesso!', 
+        'Consulta agendada com sucesso!',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              // Navegar de volta ou para minhas consultas
+              navigation.navigate('MinhasConsultas');
+            }
+          }
+        ]
+      );
+
+    } catch (error) {
+      console.error('Erro ao agendar consulta:', error);
+      Alert.alert('Erro', 'Não foi possível agendar a consulta. Tente novamente.');
+    } finally {
+      setAgendando(false);
+    }
+  };
+
+  const onDateChange = (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+      const nomesDias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+      const data = selectedDate;
+      const customDay = {
+        label: nomesDias[data.getDay()],
+        dia: data.getDate(),
+        mes: meses[data.getMonth()],
+        completo: data.toISOString().split('T')[0],
+        dataObj: data
+      };
+      setDiaSelecionado(customDay);
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -229,62 +320,56 @@ export default function DetalhesClinica() {
   const { name, especialidades, addressObj, image } = clinic;
   const addressText = `${addressObj.ruaAvenidaPraca || ''}, ${addressObj.numero || ''} - ${addressObj.bairro || ''}`;
 
-  const onDateChange = (event, selectedDate) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-      const nomesDias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-      const data = selectedDate;
-      const customDay = {
-        label: nomesDias[data.getDay()],
-        dia: data.getDate(),
-        mes: meses[data.getMonth()],
-        completo: data.toISOString().split('T')[0],
-      };
-      setDiaSelecionado(customDay);
-    }
-  };
-
   return (
     <View style={styles.screen}>
-      <View style={ styles.headerContainer }>
-         <Image
+      <View style={styles.headerContainer}>
+        <Image
           source={image}
           style={styles.mainImage}
         />
       </View>
 
-      <View style={styles.card}>
-        <View style={styles.avaliacaoTrapezio}>
-          <View style={styles.starsContainer}>
-            <Text style={styles.textAgendamento}>Agendamento</Text>
+      <ScrollView 
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.card}>
+          <View style={styles.avaliacaoTrapezio}>
+            <View style={styles.starsContainer}>
+              <Text style={styles.textAgendamento}>Agendamento</Text>
+            </View>
           </View>
-        </View>
 
-        <View style={styles.headerInfoRow}>
-          <Text style={styles.name}>{name}</Text>
-        </View>
-
-        <Text style={styles.especialidadesText}>
-          {especialidades.join(', ')}
-        </Text>
-
-        <View style={styles.divider} />
-
-        <View style={styles.infoCard}>
-          <View style={styles.infoRow}>
-            <Image source={require('../../assets/icones/location2Icon.jpg')} style={styles.smallIcon} />
-            <Text style={styles.infoText}>{addressText}</Text>
+          <View style={styles.headerInfoRow}>
+            <Text style={styles.name}>{name}</Text>
           </View>
-          
-          <Text style={styles.textAgendamento2}>Agendamento</Text>
-        </View>
 
-        <ScrollView style={styles.scrollAgendamento} showsVerticalScrollIndicator={false}>
-          <View style={{paddingHorizontal: 16}}>
-            <Text style={styles.textDia}>Dia</Text>
+          <Text style={styles.especialidadesText}>
+            {especialidades.join(', ')}
+          </Text>
 
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 10 }}>
+          <View style={styles.divider} />
+
+          <View style={styles.infoCard}>
+            <View style={styles.infoRow}>
+              <Image source={require('../../assets/icones/location2Icon.jpg')} style={styles.smallIcon} />
+              <Text style={styles.infoText}>{addressText}</Text>
+            </View>
+            
+            <Text style={styles.textAgendamento2}>Agendamento</Text>
+          </View>
+
+          <View style={styles.agendamentoContent}>
+            <View style={{paddingHorizontal: 16}}>
+              <Text style={styles.textDia}>Dia{diaSelecionado && <Text style={styles.required}> *</Text>}</Text>
+
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false} 
+                style={{ marginVertical: 10 }}
+                contentContainerStyle={styles.horizontalScroll}
+              >
                 {dias.map((item, index) => {
                   const selecionado = diaSelecionado?.completo === item.completo;
                   return (
@@ -306,8 +391,15 @@ export default function DetalhesClinica() {
                 </TouchableOpacity>
               </ScrollView>
 
-              <Text style={{ marginTop: 20, fontSize: 20 }}>Horário</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 10 }}>
+              <Text style={{ marginTop: 20, fontSize: 20 }}>
+                Horário{horarioSelecionado && <Text style={styles.required}> *</Text>}
+              </Text>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false} 
+                style={{ marginVertical: 10 }}
+                contentContainerStyle={styles.horizontalScroll}
+              >
                 {horarios.map((h, index) => {
                   const selecionado = horarioSelecionado === h;
                   return (
@@ -333,11 +425,19 @@ export default function DetalhesClinica() {
               )}
             </View>
 
-            <View>
+            <View style={styles.especialidadesSection}>
               <View style={styles.especialidadesHeader}>
-                <Text style={styles.h2}>Especialidades</Text>
+                <Text style={styles.h2}>
+                  Especialidades{selecionados.length > 0 && <Text style={styles.required}> *</Text>}
+                </Text>
                 <Text style={styles.count}>({especialidades.length})</Text>
               </View>
+
+              <Text style={styles.selecionadasText}>
+                {selecionados.length > 0 
+                  ? `${selecionados.length} especialidade(s) selecionada(s)` 
+                  : 'Nenhuma especialidade selecionada'}
+              </Text>
 
               <FlatList
                 data={especialidadesOrdenadas}
@@ -345,24 +445,41 @@ export default function DetalhesClinica() {
                 keyExtractor={(item, idx) => `${item}-${idx}`}
                 numColumns={2}
                 columnWrapperStyle={styles.columnWrapper}
-                contentContainerStyle={{ marginBottom: '150%'}} 
                 scrollEnabled={false}
               />
+            </View>
           </View>
-        </ScrollView>
-      </View>
+        </View>
+
+        <View style={styles.spacer} />
+      </ScrollView>
 
       <View style={styles.agendarContainer}>
-        <TouchableOpacity style={styles.agendarButton} onPress={() => navigation.navigate('AgendarConsulta', { clinicId: clinic.id })}>
-          <Text style={styles.agendarText}>Agendar Consulta</Text>
+        <TouchableOpacity 
+          style={[
+            styles.agendarButton, 
+            (!diaSelecionado || !horarioSelecionado || selecionados.length === 0) && styles.agendarButtonDisabled
+          ]} 
+          onPress={agendarConsulta}
+          disabled={agendando || !diaSelecionado || !horarioSelecionado || selecionados.length === 0}
+        >
+          {agendando ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.agendarText}>
+              {!diaSelecionado || !horarioSelecionado || selecionados.length === 0 
+                ? 'Preencha todos os campos' 
+                : 'Agendar Consulta'}
+            </Text>
+          )}
         </TouchableOpacity>
 
-      <TouchableOpacity style={styles.cancelarButton} onPress={() => navigation.navigate('VisualizarCE', { id: clinic.id })}>
-        <Text style={styles.cancelarText}>Cancelar</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.cancelarButton} onPress={() => navigation.navigate('VisualizarCE', { id: clinic.id })}>
+          <Text style={styles.cancelarText}>Cancelar</Text>
+        </TouchableOpacity>
       </View>
-  </View>
-);
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -374,12 +491,28 @@ const styles = StyleSheet.create({
     flex: 1, 
     justifyContent: 'center', 
     alignItems: 'center'
-   },
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  spacer: {
+    height: 100,
+  },
+  agendamentoContent: {
+    flex: 1,
+  },
+  horizontalScroll: {
+    paddingRight: 16,
+  },
   card: {
     backgroundColor: '#fff',
     borderTopLeftRadius: 35,
     borderTopRightRadius: 35,
-    marginTop: -27, 
+    marginTop: -27,
+    flex: 1,
   },
   divider: {
     height: 1.5,
@@ -426,9 +559,6 @@ const styles = StyleSheet.create({
   textAgendamento: {
     fontSize: 22,
     color: '#fff'
-  },
-  scrollAgendamento: {
-    paddingHorizontal: 0,
   },
   textAgendamento2: {
     color: '#737373',
@@ -488,7 +618,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 15,
     resizeMode: 'cover',
   },
-   nomeContainer: {
+  nomeContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-start",
@@ -512,6 +642,8 @@ const styles = StyleSheet.create({
     left: 16,
     right: 16,
     alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingVertical: 8,
   },
   agendarButton: {
     width: '100%',
@@ -521,12 +653,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 3,
   },
+  agendarButtonDisabled: {
+    backgroundColor: '#cccccc',
+  },
   agendarText: { 
     color: '#fff', 
     fontSize: 17, 
     fontWeight: '700' 
   },
-
   cardDia: {
     paddingVertical: 10,
     paddingHorizontal: 40,
@@ -587,12 +721,14 @@ const styles = StyleSheet.create({
   textHorarioSelecionado: {
     color: '#fff',
   },
+  especialidadesSection: {
+    marginTop: 20,
+  },
   especialidadesHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
     paddingHorizontal: 16,
-    marginTop: 15,
   },
   h2: { 
     fontSize: 22, 
@@ -619,5 +755,15 @@ const styles = StyleSheet.create({
   cancelarText: {
     color: '#000',
     fontSize: 17,
+  },
+  required: {
+    color: 'red',
+  },
+  selecionadasText: {
+    fontSize: 16,
+    color: '#6d8b89',
+    marginLeft: 16,
+    marginBottom: 10,
+    fontStyle: 'italic',
   },
 });

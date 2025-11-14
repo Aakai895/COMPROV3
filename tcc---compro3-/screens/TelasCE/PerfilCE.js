@@ -1,24 +1,89 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, Image,
   Platform, StatusBar, TouchableOpacity, ScrollView,
   Modal,} from 'react-native';
 import Octicons from '@expo/vector-icons/Octicons';
+import { auth, db } from '../../firebaseServices/firebaseConfig';
+import { doc, getDoc } from 'firebase/firestore';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+
+// Função para descriptografar imagem (simulação)
+const getProfileImage = (userType, userData) => {
+  // Se o usuário tiver uma foto de perfil customizada
+  if (userData?.profileImage) {
+    return { uri: userData.profileImage };
+  }
+  
+  // Imagens padrão baseadas no tipo de usuário
+  const defaultImages = {
+    user: require('../../assets/Plano_Fundo/ExploreApp.jpg.png'),
+    clinic: require('../../assets/icones/ClinicaIcon.png'),
+    empresa: require('../../assets/icones/EmpresaIcon.png'),
+  };
+  
+  return defaultImages[userType] || defaultImages.user;
+};
 
 export default function Home({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
+  const [userData, setUserData] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setCurrentUser(user);
+        // Buscar dados adicionais do usuário no Firestore
+        try {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists()) {
+            setUserData(userDoc.data());
+          } else {
+            // Se não encontrar no Firestore, usar dados básicos do auth
+            setUserData({
+              name: user.displayName || 'Usuário',
+              email: user.email,
+              userType: 'user' // padrão
+            });
+          }
+        } catch (error) {
+          console.error('Erro ao buscar dados:', error);
+          // Fallback para dados do auth
+          setUserData({
+            name: user.displayName || 'Usuário',
+            email: user.email,
+            userType: 'user'
+          });
+        }
+      }
+    });
+
+    return unsubscribe;
+  }, []);
 
   const handleLogoutPress = () => {
     setModalVisible(true);
   };
 
-  const handleConfirmLogout = () => {
-    setModalVisible(false);
-    navigation.navigate('Login'); 
+  const handleConfirmLogout = async () => {
+    try {
+      await signOut(auth);
+      setModalVisible(false);
+      navigation.navigate('Login');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
   };
 
   const handleCancelLogout = () => {
     setModalVisible(false);
   };
+
+  // Dados do usuário para exibição
+  const userName = userData?.name || currentUser?.displayName || 'Usuário';
+  const userEmail = userData?.email || currentUser?.email || '';
+  const userType = userData?.userType || 'user';
+  const profileImage = getProfileImage(userType, userData);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -29,14 +94,19 @@ export default function Home({ navigation }) {
         <TouchableOpacity style={styles.profileContainer}
           onPress={() => navigation.navigate('Avaliacoes')}
         >
-          <Image source={require('../../assets/Plano_Fundo/ExploreApp.jpg.png')}
+          <Image source={profileImage}
             style={styles.profileImage}
           />
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>
-              Lorena Alvarado</Text>
+              {userName}
+            </Text>
             <Text style={styles.profileEmail}>
-              lorenaalvarado@gmail.com
+              {userEmail}
+            </Text>
+            <Text style={styles.userType}>
+              {userType === 'clinic' ? 'Clínica' : 
+               userType === 'empresa' ? 'Empresa' : 'Usuário'}
             </Text>
           </View>
           <Octicons name="chevron-right" size={40} color="#ff788a" style={styles.chevron} />
@@ -213,6 +283,7 @@ const styles = StyleSheet.create({
   profileInfo: {
     flexDirection: 'column',
     marginLeft: 16,
+    flex: 1,
   },
   profileName: {
     fontSize: 18,
@@ -224,6 +295,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'white',
     marginTop: 4,
+    fontFamily: 'Alice-Regular',
+  },
+  userType: {
+    fontSize: 12,
+    color: '#ff788a',
+    marginTop: 2,
     fontFamily: 'Alice-Regular',
   },
   chevron: {
@@ -327,10 +404,10 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   modalOverlay: {
-  flex: 1,
-  backgroundColor: 'rgba(0,0,0,0.5)',
-  justifyContent: 'flex-end',
-},
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
   modalBox: {
     width: '100%',
     backgroundColor: '#fff',
@@ -339,8 +416,6 @@ const styles = StyleSheet.create({
     paddingVertical: 30,
     paddingHorizontal: 20,
     alignItems: 'center',
-    // ADICIONADO:
     paddingBottom: Platform.OS === 'android' ? 30 : 40,
-    // REMOVER: minHeight: 280,  -> Pode causar problemas visuais
   },
 });

@@ -109,5 +109,5 @@ export default function App() {
         <Stack.Screen name="PoliticaPrivCE" component={PoliticaPrivCE} />
       </Stack.Navigator>
     </NavigationContainer>
-  );
+  );
 }
