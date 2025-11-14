@@ -8,7 +8,7 @@ import { useFonts } from 'expo-font';
 import HomeScreen from './Home';
 import Loja from './Loja';
 import Consultas from './Consultas';
-import Perfil from './Profile';
+import Perfil from './Perfil';
 import Emocoes from './Emocoes';
 import Chat from './Chat';
 
