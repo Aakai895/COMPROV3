@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity,
-  Image, ScrollView, Dimensions, ImageBackground } from 'react-native';
+  Image, ScrollView, Dimensions, ImageBackground, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { auth, db } from '../../firebaseServices/firebaseConfig';
+import { collection, query, where, onSnapshot, doc, updateDoc, orderBy } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
@@ -14,70 +17,105 @@ export default function MinhasConsultas() {
   const navigation = useNavigation();
   const [aba, setAba] = useState('proximos');
   const [detalhesVisiveis, setDetalhesVisiveis] = useState({});
+  const [consultas, setConsultas] = useState([]);
+  const [userId, setUserId] = useState(null);
 
-  const todasConsultas = [
-    {
-      id: '1',
-      tipo: 'Clínica',
-      nome: 'Alvaro Mendes',
-      endereco: 'Rua Mathias Cardoso, 321 - Itapecerica da Serra - SP.',
-      data: 'Segunda, 30 de agosto de 2025',
-      horario: '8:30 - 9:15',
-      doutor: 'Fabio',
-      status: 'proximos',
-      statusAvaliacao: '',
-    },
-    {
-      id: '2',
-      tipo: 'Empresa',
-      nome: 'Alvaro Mendes',
-      endereco: 'Rua Michael do Santos, 035 - Taboão da Serra - SP.',
-      data: 'Segunda, 30 de agosto de 2025',
-      horario: '8:30 - 9:15',
-      doutor: 'Fabio',
-      status: 'proximos',
-      statusAvaliacao: '',
-    },
-    {
-      id: '3',
-      tipo: 'Clínica',
-      nome: 'Maria Silva',
-      endereco: 'Av. Brasil, 100 - São Paulo - SP.',
-      data: 'Terça, 31 de agosto de 2025',
-      horario: '10:00 - 10:45',
-      doutor: 'Ana',
-      status: 'concluidos',
-      statusAvaliacao: '',
-    },
-    {
-      id: '4',
-      tipo: 'Empresa',
-      nome: 'João Pereira',
-      endereco: 'Rua das Flores, 500 - Campinas - SP.',
-      data: 'Quarta, 1 de setembro de 2025',
-      horario: '14:00 - 14:30',
-      doutor: 'Carlos',
-      status: 'concluidos',
-      statusAvaliacao: 'avaliado',
-    },
-    {
-      id: '5',
-      tipo: 'Clinica',
-      nome: 'João Pereira',
-      endereco: 'Rua das Flores, 500 - Campinas - SP.',
-      data: 'Quarta, 1 de setembro de 2025',
-      horario: '14:00 - 14:30',
-      doutor: 'Carlos',
-      status: 'cancelados',
-      statusAvaliacao: 'avaliado',
-    },
-  ];
+  // Monitora autenticação do usuário
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUserId(user.uid);
+      } else {
+        setUserId(null);
+        setConsultas([]);
+      }
+    });
+
+    return unsubscribeAuth;
+  }, []);
+
+  // Busca consultas do usuário no Firebase
+  useEffect(() => {
+    if (!userId) return;
+
+    const q = query(
+      collection(db, 'consultas'),
+      where('userId', '==', userId),
+      orderBy('data', 'asc')
+    );
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const consultasData = [];
+      querySnapshot.forEach((doc) => {
+        consultasData.push({ id: doc.id, ...doc.data() });
+      });
+      setConsultas(consultasData);
+    });
+
+    return unsubscribe;
+  }, [userId]);
 
   const toggleDetalhes = (consultaId) => {
     setDetalhesVisiveis(prev => ({ ...prev, [consultaId]: !prev[consultaId] }));
   };
 
-  const consultasFiltradas = todasConsultas.filter(c => c.status === aba);
+  // Função para cancelar consulta
+  const cancelarConsulta = async (consultaId) => {
+    try {
+      const consultaRef = doc(db, 'consultas', consultaId);
+      await updateDoc(consultaRef, {
+        status: 'cancelados',
+        dataCancelamento: new Date().toISOString()
+      });
+      Alert.alert('Sucesso', 'Consulta cancelada com sucesso!');
+    } catch (error) {
+      console.error('Erro ao cancelar consulta:', error);
+      Alert.alert('Erro', 'Não foi possível cancelar a consulta.');
+    }
+  };
+
+  // Função para confirmar cancelamento
+  const confirmarCancelamento = (consultaId) => {
+    Alert.alert(
+      'Cancelar Consulta',
+      'Tem certeza que deseja cancelar esta consulta?',
+      [
+        { text: 'Não', style: 'cancel' },
+        { text: 'Sim', onPress: () => cancelarConsulta(consultaId) }
+      ]
+    );
+  };
+
+  // Filtrar consultas baseado na aba selecionada
+  const consultasFiltradas = consultas.filter(consulta => {
+    if (aba === 'proximos') {
+      return consulta.status === 'agendada' || consulta.status === 'confirmada';
+    } else if (aba === 'concluidos') {
+      return consulta.status === 'concluida';
+    } else if (aba === 'cancelados') {
+      return consulta.status === 'cancelada' || consulta.status === 'cancelados';
+    }
+    return false;
+  });
+
+  // Formatar data para exibição
+  const formatarData = (dataString) => {
+    if (!dataString) return 'Data não definida';
+    
+    const data = new Date(dataString);
+    const options = { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    };
+    return data.toLocaleDateString('pt-BR', options);
+  };
+
+  // Encontrar próxima consulta para o banner
+  const proximaConsulta = consultasFiltradas
+    .filter(consulta => consulta.status === 'agendada' || consulta.status === 'confirmada')
+    .sort((a, b) => new Date(a.data) - new Date(b.data))[0];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -133,43 +171,71 @@ export default function MinhasConsultas() {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-        {aba === 'proximos' && (
-          <ImageBackground source={require('../../assets/Plano_Fundo/Banner.png')} style={styles.banner}>
-            <View style={styles.proximosHeaderContainer}>
-              <Text style={styles.proximosMinhasText}>Minhas</Text>
-              <Text style={styles.proximosConsultasText}> Consultas</Text>
-            </View>
+          {aba === 'proximos' && proximaConsulta && (
+            <ImageBackground source={require('../../assets/Plano_Fundo/Banner.png')} style={styles.banner}>
+              <View style={styles.proximosHeaderContainer}>
+                <Text style={styles.proximosMinhasText}>Minhas</Text>
+                <Text style={styles.proximosConsultasText}> Consultas</Text>
+              </View>
 
-            <View style={styles.boxverde}>
-              <View style={styles.next}>
-                <Image source={require('../../assets/icones/calendarioIcon.png')} 
-                  style={styles.calendarIcon} 
-                />
-                <Text style={styles.proximosNextText}>
-                  Próxima consulta
+              <View style={styles.boxverde}>
+                <View style={styles.next}>
+                  <Image source={require('../../assets/icones/calendarioIcon.png')} 
+                    style={styles.calendarIcon} 
+                  />
+                  <Text style={styles.proximosNextText}>
+                    Próxima consulta
+                  </Text>
+                </View>
+                <Text style={styles.proximosConsultaClinicaText}>
+                  Consulta - {proximaConsulta.tipo}
+                </Text>
+                <Text style={styles.proximosSmallTextMarginTop3}>
+                  {proximaConsulta.tipo === 'Clínica' ? 'Clínica:' : 'Empresa:'} {proximaConsulta.nomeEstabelecimento}
+                </Text>
+                <Text style={styles.proximosSmallTextMarginTop1}>
+                  Endereço: {proximaConsulta.endereco}
+                </Text>
+                <Text style={styles.proximosSmallTextMarginTop10}>
+                  Data: {formatarData(proximaConsulta.data)}
+                </Text>
+                <Text style={styles.proximosSmallTextMarginTop1}>
+                  Horário: {proximaConsulta.horario}
+                </Text>
+                <Text style={styles.proximosSmallTextMarginTop1}>
+                  Doutor(a): {proximaConsulta.doutor}
+                </Text>
+                
+                <TouchableOpacity style={styles.cancel} 
+                  onPress={() => confirmarCancelamento(proximaConsulta.id)}
+                >
+                  <Text style={styles.proximosCancelText}>
+                    Cancelar
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </ImageBackground>
+          )}
+
+          {aba === 'proximos' && !proximaConsulta && consultasFiltradas.length === 0 && (
+            <ImageBackground source={require('../../assets/Plano_Fundo/Banner.png')} style={styles.banner}>
+              <View style={styles.proximosHeaderContainer}>
+                <Text style={styles.proximosMinhasText}>Minhas</Text>
+                <Text style={styles.proximosConsultasText}> Consultas</Text>
+              </View>
+              <View style={styles.boxverde}>
+                <Text style={styles.noConsultasText}>
+                  Nenhuma consulta agendada
                 </Text>
               </View>
-              <Text style={styles.proximosConsultaClinicaText}>Consulta - Clínica</Text>
-              <Text style={styles.proximosSmallTextMarginTop3}>Clínica: Carvalho de Oliveira.</Text>
-              <Text style={styles.proximosSmallTextMarginTop1}>Endereço: …Embu das Artes ‑ SP.</Text>
-              <Text style={styles.proximosSmallTextMarginTop10}>Data: Segunda, 12 de Junho de 2025.</Text>
-              <Text style={styles.proximosSmallTextMarginTop1}>Horário: 9:30 ‑ 10:00.</Text>
-              <Text style={styles.proximosSmallTextMarginTop1}>Doutor(a): Silvana Pães.</Text>
-              
-              <TouchableOpacity style={styles.cancel} 
-                onPress={() => navigation.navigate('CancelarConsulta')}
-              >
-                <Text style={styles.proximosCancelText}>
-                  Cancelar
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </ImageBackground>
-        )}
+            </ImageBackground>
+          )}
 
-        {consultasFiltradas.length === 0 && (
-          <Text style={styles.noConsultasText}>Nenhuma consulta nesta aba.</Text>
-        )}
+          {consultasFiltradas.length === 0 && aba !== 'proximos' && (
+            <View style={styles.noConsultasContainer}>
+              <Text style={styles.noConsultasText}>Nenhuma consulta {aba}</Text>
+            </View>
+          )}
 
           {consultasFiltradas.map(consulta => {
             const icon = consulta.tipo === 'Empresa' ? EmpresaIcon : ClinicaIcon;
@@ -186,9 +252,13 @@ export default function MinhasConsultas() {
                     </Text>
 
                     {aba === 'concluidos' && (
-                      consulta.statusAvaliacao !== 'avaliado' ? (
+                      consulta.avaliado ? (
+                        <Text style={[styles.avaliarText, styles.avaliadoText]}>
+                          Avaliado
+                        </Text>
+                      ) : (
                         <TouchableOpacity style={styles.avaliarContainer}
-                          onPress={() => navigation.navigate('Avaliar', { id: consulta.id })} 
+                          onPress={() => navigation.navigate('AvaliarCE', { consultaId: consulta.id })} 
                         >
                           <Image source={LapisIcon} 
                             style={styles.lapisIcon} 
@@ -197,10 +267,6 @@ export default function MinhasConsultas() {
                             Avaliar
                           </Text>
                         </TouchableOpacity>
-                      ) : (
-                        <Text style={[styles.avaliarText, styles.avaliadoText]}>
-                          Avaliado
-                        </Text>
                       )
                     )}
                   </View>
@@ -211,7 +277,7 @@ export default function MinhasConsultas() {
                     <Text style={styles.labelText}>
                       {consulta.tipo === 'Clínica' ? 'Clínica:' : 'Empresa:'}
                     </Text>
-                    <Text style={styles.normalText}> {consulta.nome}</Text>
+                    <Text style={styles.normalText}> {consulta.nomeEstabelecimento}</Text>
                   </View>
 
                   <View style={styles.row}>
@@ -227,7 +293,7 @@ export default function MinhasConsultas() {
                         <Text style={styles.smallLabelTextData}>
                           Data:
                         </Text>
-                        <Text style={styles.smallNormalText2}> {consulta.data}</Text>
+                        <Text style={styles.smallNormalText2}> {formatarData(consulta.data)}</Text>
                       </View>
 
                       <View style={styles.rowCentered}>
@@ -256,7 +322,7 @@ export default function MinhasConsultas() {
 
                     {aba === 'proximos' && (
                       <TouchableOpacity style={styles.brancopequeno}
-                        onPress={() => navigation.navigate('CancelarConsulta', { id: consulta.id })}
+                        onPress={() => confirmarCancelamento(consulta.id)}
                       >
                         <Text style={styles.textopequeno2}>
                           Cancelar
@@ -266,10 +332,10 @@ export default function MinhasConsultas() {
                     
                     {aba === 'cancelados' && (
                       <TouchableOpacity style={styles.brancopequeno}
-                        onPress={() => navigation.navigate('ReagendarConsulta', { id: consulta.id })} 
+                        onPress={() => navigation.navigate('AgendamentoCE', { consultaOriginal: consulta })} 
                       >
                         <Text style={styles.textopequeno2}>
-                          Re-agendar
+                          Reagendar
                         </Text>
                       </TouchableOpacity>
                     )}
@@ -284,6 +350,7 @@ export default function MinhasConsultas() {
   );
 }
 
+// Os styles permanecem exatamente os mesmos
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
@@ -453,6 +520,10 @@ const styles = StyleSheet.create({
     marginTop: 20, 
     fontSize: 16,
     color: '#666' 
+  },
+  noConsultasContainer: {
+    padding: 20,
+    alignItems: 'center',
   },
   whitebox: { 
     backgroundColor: 'white',  

@@ -58,7 +58,7 @@ const Stack = createStackNavigator();
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Loading" screenOptions={{ headerShown: false }}>
+      <Stack.Navigator initialRouteName="TelasUsuario" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Loading" component={Loading} />
         <Stack.Screen name="Bem_Vindo1" component={Bem_Vindo1} />
         <Stack.Screen name="Bem_Vindo2" component={Bem_Vindo2} />
