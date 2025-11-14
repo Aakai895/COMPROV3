@@ -11,7 +11,6 @@ const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 const ClinicaIcon = require('../../assets/icones/ClinicaIcon.png');
 const EmpresaIcon = require('../../assets/icones/EmpresaIcon.png');
 const LapisIcon = require('../../assets/icones/lapisIcon.png');
-const BannerProximos = require('../../assets/Plano_Fundo/Medico.png');
 
 export default function MinhasConsultas() {
   const navigation = useNavigation();
@@ -34,14 +33,14 @@ export default function MinhasConsultas() {
     return unsubscribeAuth;
   }, []);
 
-  // Busca consultas do usuário no Firebase
+  // Busca consultas do usuário no Firebase - SEM ORDERBY para evitar índice
   useEffect(() => {
     if (!userId) return;
 
     const q = query(
       collection(db, 'consultas'),
-      where('userId', '==', userId),
-      orderBy('data', 'asc')
+      where('userId', '==', userId)
+      // Removido orderBy para evitar necessidade de índice
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -49,11 +48,43 @@ export default function MinhasConsultas() {
       querySnapshot.forEach((doc) => {
         consultasData.push({ id: doc.id, ...doc.data() });
       });
+      
+      // Ordenar localmente por data
+      consultasData.sort((a, b) => new Date(a.data) - new Date(b.data));
+      
+      // Verificar e atualizar status das consultas automaticamente
+      consultasData.forEach(consulta => {
+        verificarEAtualizarStatus(consulta);
+      });
+      
       setConsultas(consultasData);
     });
 
     return unsubscribe;
   }, [userId]);
+
+  // Função para verificar e atualizar status automaticamente
+  const verificarEAtualizarStatus = async (consulta) => {
+    try {
+      // Só atualiza se ainda estiver como agendada
+      if (consulta.status !== 'agendada') return;
+      
+      const hoje = new Date();
+      const dataConsulta = new Date(consulta.data);
+      
+      // Se a consulta já passou, marcar como concluída
+      if (dataConsulta < hoje) {
+        const consultaRef = doc(db, 'consultas', consulta.id);
+        await updateDoc(consultaRef, {
+          status: 'concluida',
+          dataConclusao: new Date().toISOString()
+        });
+        console.log(`Consulta ${consulta.id} marcada como concluída automaticamente`);
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar status da consulta:', error);
+    }
+  };
 
   const toggleDetalhes = (consultaId) => {
     setDetalhesVisiveis(prev => ({ ...prev, [consultaId]: !prev[consultaId] }));
@@ -64,7 +95,7 @@ export default function MinhasConsultas() {
     try {
       const consultaRef = doc(db, 'consultas', consultaId);
       await updateDoc(consultaRef, {
-        status: 'cancelados',
+        status: 'cancelada',
         dataCancelamento: new Date().toISOString()
       });
       Alert.alert('Sucesso', 'Consulta cancelada com sucesso!');
@@ -89,11 +120,11 @@ export default function MinhasConsultas() {
   // Filtrar consultas baseado na aba selecionada
   const consultasFiltradas = consultas.filter(consulta => {
     if (aba === 'proximos') {
-      return consulta.status === 'agendada' || consulta.status === 'confirmada';
+      return consulta.status === 'agendada';
     } else if (aba === 'concluidos') {
       return consulta.status === 'concluida';
     } else if (aba === 'cancelados') {
-      return consulta.status === 'cancelada' || consulta.status === 'cancelados';
+      return consulta.status === 'cancelada';
     }
     return false;
   });
@@ -102,19 +133,29 @@ export default function MinhasConsultas() {
   const formatarData = (dataString) => {
     if (!dataString) return 'Data não definida';
     
-    const data = new Date(dataString);
-    const options = { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    };
-    return data.toLocaleDateString('pt-BR', options);
+    try {
+      const data = new Date(dataString);
+      // Verificar se a data é válida
+      if (isNaN(data.getTime())) {
+        return 'Data inválida';
+      }
+      
+      const options = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      };
+      return data.toLocaleDateString('pt-BR', options);
+    } catch (error) {
+      console.error('Erro ao formatar data:', error);
+      return 'Data inválida';
+    }
   };
 
   // Encontrar próxima consulta para o banner
   const proximaConsulta = consultasFiltradas
-    .filter(consulta => consulta.status === 'agendada' || consulta.status === 'confirmada')
+    .filter(consulta => consulta.status === 'agendada')
     .sort((a, b) => new Date(a.data) - new Date(b.data))[0];
 
   return (
@@ -188,22 +229,22 @@ export default function MinhasConsultas() {
                   </Text>
                 </View>
                 <Text style={styles.proximosConsultaClinicaText}>
-                  Consulta - {proximaConsulta.tipo}
+                  Consulta - {proximaConsulta.tipo || 'Clínica'}
                 </Text>
                 <Text style={styles.proximosSmallTextMarginTop3}>
-                  {proximaConsulta.tipo === 'Clínica' ? 'Clínica:' : 'Empresa:'} {proximaConsulta.nomeEstabelecimento}
+                  {(proximaConsulta.tipo === 'Clínica' ? 'Clínica:' : 'Empresa:')} {proximaConsulta.clinicName || 'Nome não disponível'}
                 </Text>
                 <Text style={styles.proximosSmallTextMarginTop1}>
-                  Endereço: {proximaConsulta.endereco}
+                  Endereço: {proximaConsulta.endereco || 'Endereço não disponível'}
                 </Text>
                 <Text style={styles.proximosSmallTextMarginTop10}>
                   Data: {formatarData(proximaConsulta.data)}
                 </Text>
                 <Text style={styles.proximosSmallTextMarginTop1}>
-                  Horário: {proximaConsulta.horario}
+                  Horário: {proximaConsulta.horario || 'Horário não disponível'}
                 </Text>
                 <Text style={styles.proximosSmallTextMarginTop1}>
-                  Doutor(a): {proximaConsulta.doutor}
+                  Especialidades: {proximaConsulta.especialidades?.join(', ') || 'Nenhuma especialidade'}
                 </Text>
                 
                 <TouchableOpacity style={styles.cancel} 
@@ -238,7 +279,8 @@ export default function MinhasConsultas() {
           )}
 
           {consultasFiltradas.map(consulta => {
-            const icon = consulta.tipo === 'Empresa' ? EmpresaIcon : ClinicaIcon;
+            const icon = (consulta.tipo === 'Empresa') ? EmpresaIcon : ClinicaIcon;
+            
             return (
               <View key={consulta.id} style={styles.whitebox}>
                 <Image source={icon} 
@@ -248,7 +290,7 @@ export default function MinhasConsultas() {
                 <View style={styles.contentBox}>
                   <View style={styles.rowSpaceBetween}>
                     <Text style={styles.titleText}>
-                      Consulta - {consulta.tipo}
+                      Consulta - {consulta.tipo || 'Clínica'}
                     </Text>
 
                     {aba === 'concluidos' && (
@@ -258,7 +300,11 @@ export default function MinhasConsultas() {
                         </Text>
                       ) : (
                         <TouchableOpacity style={styles.avaliarContainer}
-                          onPress={() => navigation.navigate('AvaliarCE', { consultaId: consulta.id })} 
+                          onPress={() => navigation.navigate('AvaliarCE', { 
+                            consultaId: consulta.id,
+                            clinicId: consulta.clinicId,
+                            clinicName: consulta.clinicName
+                          })} 
                         >
                           <Image source={LapisIcon} 
                             style={styles.lapisIcon} 
@@ -275,16 +321,16 @@ export default function MinhasConsultas() {
 
                   <View style={styles.rowCentered}>
                     <Text style={styles.labelText}>
-                      {consulta.tipo === 'Clínica' ? 'Clínica:' : 'Empresa:'}
+                      {(consulta.tipo === 'Clínica' ? 'Clínica:' : 'Empresa:')}
                     </Text>
-                    <Text style={styles.normalText}> {consulta.nomeEstabelecimento}</Text>
+                    <Text style={styles.normalText}> {consulta.clinicName || 'Nome não disponível'}</Text>
                   </View>
 
                   <View style={styles.row}>
                     <Text style={styles.labelText}>
                       Endereço:
                     </Text>
-                    <Text style={styles.addressText}> {consulta.endereco}</Text>
+                    <Text style={styles.addressText}> {consulta.endereco || 'Endereço não disponível'}</Text>
                   </View>
 
                   {detalhesVisiveis[consulta.id] && (
@@ -300,15 +346,33 @@ export default function MinhasConsultas() {
                         <Text style={styles.smallLabelText}>
                           Horário:
                         </Text>
-                        <Text style={styles.smallNormalText}> {consulta.horario}</Text>
+                        <Text style={styles.smallNormalText}> {consulta.horario || 'Horário não disponível'}</Text>
                       </View>
 
                       <View style={styles.rowCentered}>
                         <Text style={styles.smallLabelText}>
-                          Doutor(a):
+                          Especialidades:
                         </Text>
-                        <Text style={styles.smallNormalText}> {consulta.doutor}</Text>
+                        <Text style={styles.smallNormalText}> {consulta.especialidades?.join(', ') || 'Nenhuma especialidade'}</Text>
                       </View>
+
+                      {consulta.dataCancelamento && (
+                        <View style={styles.rowCentered}>
+                          <Text style={styles.smallLabelText}>
+                            Cancelada em:
+                          </Text>
+                          <Text style={styles.smallNormalText}> {formatarData(consulta.dataCancelamento)}</Text>
+                        </View>
+                      )}
+
+                      {consulta.dataConclusao && (
+                        <View style={styles.rowCentered}>
+                          <Text style={styles.smallLabelText}>
+                            Concluída em:
+                          </Text>
+                          <Text style={styles.smallNormalText}> {formatarData(consulta.dataConclusao)}</Text>
+                        </View>
+                      )}
                     </View>
                   )}
                   <View style={styles.buttonsContainer}>
@@ -332,7 +396,10 @@ export default function MinhasConsultas() {
                     
                     {aba === 'cancelados' && (
                       <TouchableOpacity style={styles.brancopequeno}
-                        onPress={() => navigation.navigate('AgendamentoCE', { consultaOriginal: consulta })} 
+                        onPress={() => navigation.navigate('AgendamentoCE', { 
+                          clinicId: consulta.clinicId,
+                          especialidadesSelecionadas: consulta.especialidades 
+                        })} 
                       >
                         <Text style={styles.textopequeno2}>
                           Reagendar
@@ -350,7 +417,7 @@ export default function MinhasConsultas() {
   );
 }
 
-// Os styles permanecem exatamente os mesmos
+// Os styles permanecem os mesmos...
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
