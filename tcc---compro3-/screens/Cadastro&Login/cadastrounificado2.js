@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, TouchableWithoutFeedback, Keyboard, useWindowDimensions, StyleSheet, LayoutAnimation, Animated, Platform, Alert } from 'react-native';
 import { AntDesign, FontAwesome } from '@expo/vector-icons';
-import { Eye, EyeOff } from 'lucide-react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useFonts } from 'expo-font';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -525,8 +525,11 @@ export default function CadastroDadosScreen() {
               onChangeText={setSenha}
             />
             <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)}>
-              {passwordVisible ? <Eye color={iconColor} size={25} /> : <EyeOff color={iconColor} size={25} />}
-            </TouchableOpacity>
+  {passwordVisible ? 
+    <Ionicons name="eye-off" color={iconColor} size={25} /> : 
+    <Ionicons name="eye" color={iconColor} size={25} />
+  }
+</TouchableOpacity>
           </View>
 
           <Text style={[styles.label, { color: textColor }]}>
@@ -541,9 +544,12 @@ export default function CadastroDadosScreen() {
               value={confirmarSenha}
               onChangeText={setConfirmarSenha}
             />
-            <TouchableOpacity onPress={() => setConfirmPasswordVisible(!confirmPasswordVisible)}>
-              {confirmPasswordVisible ? <Eye color={iconColor} size={25} /> : <EyeOff color={iconColor} size={25} />}
-            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)}>
+  {passwordVisible ? 
+    <Ionicons name="eye-off" color={iconColor} size={25} /> : 
+    <Ionicons name="eye" color={iconColor} size={25} />
+  }
+</TouchableOpacity>
           </View>
 
           {showDatePicker && (
