@@ -213,211 +213,217 @@ export default function MinhasConsultas() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           {aba === 'proximos' && proximaConsulta && (
-            <ImageBackground source={require('../../assets/Plano_Fundo/Banner.png')} style={styles.banner}>
-              <View style={styles.proximosHeaderContainer}>
-                <Text style={styles.proximosMinhasText}>Minhas</Text>
-                <Text style={styles.proximosConsultasText}> Consultas</Text>
-              </View>
-
-              <View style={styles.boxverde}>
-                <View style={styles.next}>
-                  <Image source={require('../../assets/icones/calendarioIcon.png')} 
-                    style={styles.calendarIcon} 
-                  />
-                  <Text style={styles.proximosNextText}>
-                    Próxima consulta
-                  </Text>
+            <View style={styles.bannerContainer}>
+              <ImageBackground source={require('../../assets/Plano_Fundo/Banner.png')} style={styles.banner}>
+                <View style={styles.proximosHeaderContainer}>
+                  <Text style={styles.proximosMinhasText}>Minhas</Text>
+                  <Text style={styles.proximosConsultasText}> Consultas</Text>
                 </View>
-                <Text style={styles.proximosConsultaClinicaText}>
-                  Consulta - {proximaConsulta.tipo || 'Clínica'}
-                </Text>
-                <Text style={styles.proximosSmallTextMarginTop3}>
-                  {(proximaConsulta.tipo === 'Clínica' ? 'Clínica:' : 'Empresa:')} {proximaConsulta.clinicName || 'Nome não disponível'}
-                </Text>
-                <Text style={styles.proximosSmallTextMarginTop1}>
-                  Endereço: {proximaConsulta.endereco || 'Endereço não disponível'}
-                </Text>
-                <Text style={styles.proximosSmallTextMarginTop10}>
-                  Data: {formatarData(proximaConsulta.data)}
-                </Text>
-                <Text style={styles.proximosSmallTextMarginTop1}>
-                  Horário: {proximaConsulta.horario || 'Horário não disponível'}
-                </Text>
-                <Text style={styles.proximosSmallTextMarginTop1}>
-                  Especialidades: {proximaConsulta.especialidades?.join(', ') || 'Nenhuma especialidade'}
-                </Text>
-                
-                <TouchableOpacity style={styles.cancel} 
-                  onPress={() => confirmarCancelamento(proximaConsulta.id)}
-                >
-                  <Text style={styles.proximosCancelText}>
-                    Cancelar
+
+                <View style={styles.boxverde}>
+                  <View style={styles.next}>
+                    <Image source={require('../../assets/icones/calendarioIcon.png')} 
+                      style={styles.calendarIcon} 
+                    />
+                    <Text style={styles.proximosNextText}>
+                      Próxima consulta
+                    </Text>
+                  </View>
+                  <Text style={styles.proximosConsultaClinicaText}>
+                    Consulta - {proximaConsulta.tipo || 'Clínica'}
                   </Text>
-                </TouchableOpacity>
-              </View>
-            </ImageBackground>
-          )}
-
-          {aba === 'proximos' && !proximaConsulta && consultasFiltradas.length === 0 && (
-            <ImageBackground source={require('../../assets/Plano_Fundo/Banner.png')} style={styles.banner}>
-              <View style={styles.proximosHeaderContainer}>
-                <Text style={styles.proximosMinhasText}>Minhas</Text>
-                <Text style={styles.proximosConsultasText}> Consultas</Text>
-              </View>
-              <View style={styles.boxverde}>
-                <Text style={styles.noConsultasText}>
-                  Nenhuma consulta agendada
-                </Text>
-              </View>
-            </ImageBackground>
-          )}
-
-          {consultasFiltradas.length === 0 && aba !== 'proximos' && (
-            <View style={styles.noConsultasContainer}>
-              <Text style={styles.noConsultasText}>Nenhuma consulta {aba}</Text>
+                  <Text style={styles.proximosSmallTextMarginTop3}>
+                    {(proximaConsulta.tipo === 'Clínica' ? 'Clínica:' : 'Empresa:')} {proximaConsulta.clinicName || 'Nome não disponível'}
+                  </Text>
+                  <Text style={styles.proximosSmallTextMarginTop1}>
+                    Endereço: {proximaConsulta.endereco || 'Endereço não disponível'}
+                  </Text>
+                  <Text style={styles.proximosSmallTextMarginTop10}>
+                    Data: {formatarData(proximaConsulta.data)}
+                  </Text>
+                  <Text style={styles.proximosSmallTextMarginTop1}>
+                    Horário: {proximaConsulta.horario || 'Horário não disponível'}
+                  </Text>
+                  <Text style={styles.proximosSmallTextMarginTop1}>
+                    Especialidades: {proximaConsulta.especialidades?.join(', ') || 'Nenhuma especialidade'}
+                  </Text>
+                  
+                  <TouchableOpacity style={styles.cancel} 
+                    onPress={() => confirmarCancelamento(proximaConsulta.id)}
+                  >
+                    <Text style={styles.proximosCancelText}>
+                      Cancelar
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </ImageBackground>
             </View>
           )}
 
-          {consultasFiltradas.map(consulta => {
-            const icon = (consulta.tipo === 'Empresa') ? EmpresaIcon : ClinicaIcon;
-            
-            return (
-              <View key={consulta.id} style={styles.whitebox}>
-                <Image source={icon} 
-                  style={styles.iconewhite} 
-                />
+          {aba === 'proximos' && !proximaConsulta && consultasFiltradas.length === 0 && (
+            <View style={styles.bannerContainer}>
+              <ImageBackground source={require('../../assets/Plano_Fundo/Banner.png')} style={styles.banner}>
+                <View style={styles.proximosHeaderContainer}>
+                  <Text style={styles.proximosMinhasText}>Minhas</Text>
+                  <Text style={styles.proximosConsultasText}> Consultas</Text>
+                </View>
+                <View style={styles.boxverde}>
+                  <Text style={styles.noConsultasText}>
+                    Nenhuma consulta agendada
+                  </Text>
+                </View>
+              </ImageBackground>
+            </View>
+          )}
 
-                <View style={styles.contentBox}>
-                  <View style={styles.rowSpaceBetween}>
-                    <Text style={styles.titleText}>
-                      Consulta - {consulta.tipo || 'Clínica'}
-                    </Text>
+          {/* Container separado para as consultas listadas */}
+          <View style={styles.consultasListContainer}>
+            {consultasFiltradas.length === 0 && aba !== 'proximos' && (
+              <View style={styles.noConsultasContainer}>
+                <Text style={styles.noConsultasText}>Nenhuma consulta {aba}</Text>
+              </View>
+            )}
 
-                    {aba === 'concluidos' && (
-                      consulta.avaliado ? (
-                        <Text style={[styles.avaliarText, styles.avaliadoText]}>
-                          Avaliado
-                        </Text>
-                      ) : (
-                        <TouchableOpacity style={styles.avaliarContainer}
-                          onPress={() => navigation.navigate('AvaliarCE', { 
-                            consultaId: consulta.id,
-                            clinicId: consulta.clinicId,
-                            clinicName: consulta.clinicName
-                          })} 
-                        >
-                          <Image source={LapisIcon} 
-                            style={styles.lapisIcon} 
-                          />
-                          <Text style={styles.avaliarText}>
-                            Avaliar
+            {consultasFiltradas.map(consulta => {
+              const icon = (consulta.tipo === 'Empresa') ? EmpresaIcon : ClinicaIcon;
+              
+              return (
+                <View key={consulta.id} style={styles.whitebox}>
+                  <Image source={icon} 
+                    style={styles.iconewhite} 
+                  />
+
+                  <View style={styles.contentBox}>
+                    <View style={styles.rowSpaceBetween}>
+                      <Text style={styles.titleText}>
+                        Consulta - {consulta.tipo || 'Clínica'}
+                      </Text>
+
+                      {aba === 'concluidos' && (
+                        consulta.avaliado ? (
+                          <Text style={[styles.avaliarText, styles.avaliadoText]}>
+                            Avaliado
                           </Text>
-                        </TouchableOpacity>
-                      )
-                    )}
-                  </View>
-
-                  <View style={styles.separator} />
-
-                  <View style={styles.rowCentered}>
-                    <Text style={styles.labelText}>
-                      {(consulta.tipo === 'Clínica' ? 'Clínica:' : 'Empresa:')}
-                    </Text>
-                    <Text style={styles.normalText}> {consulta.clinicName || 'Nome não disponível'}</Text>
-                  </View>
-
-                  <View style={styles.row}>
-                    <Text style={styles.labelText}>
-                      Endereço:
-                    </Text>
-                    <Text style={styles.addressText}> {consulta.endereco || 'Endereço não disponível'}</Text>
-                  </View>
-
-                  {detalhesVisiveis[consulta.id] && (
-                    <View style={styles.detalhesContainer}>
-                      <View style={styles.rowCentered}>
-                        <Text style={styles.smallLabelTextData}>
-                          Data:
-                        </Text>
-                        <Text style={styles.smallNormalText2}> {formatarData(consulta.data)}</Text>
-                      </View>
-
-                      <View style={styles.rowCentered}>
-                        <Text style={styles.smallLabelText}>
-                          Horário:
-                        </Text>
-                        <Text style={styles.smallNormalText}> {consulta.horario || 'Horário não disponível'}</Text>
-                      </View>
-
-                      <View style={styles.rowCentered}>
-                        <Text style={styles.smallLabelText}>
-                          Especialidades:
-                        </Text>
-                        <Text style={styles.smallNormalText}> {consulta.especialidades?.join(', ') || 'Nenhuma especialidade'}</Text>
-                      </View>
-
-                      {consulta.dataCancelamento && (
-                        <View style={styles.rowCentered}>
-                          <Text style={styles.smallLabelText}>
-                            Cancelada em:
-                          </Text>
-                          <Text style={styles.smallNormalText}> {formatarData(consulta.dataCancelamento)}</Text>
-                        </View>
-                      )}
-
-                      {consulta.dataConclusao && (
-                        <View style={styles.rowCentered}>
-                          <Text style={styles.smallLabelText}>
-                            Concluída em:
-                          </Text>
-                          <Text style={styles.smallNormalText}> {formatarData(consulta.dataConclusao)}</Text>
-                        </View>
+                        ) : (
+                          <TouchableOpacity style={styles.avaliarContainer}
+                            onPress={() => navigation.navigate('AvaliarCE', { 
+                              consultaId: consulta.id,
+                              clinicId: consulta.clinicId,
+                              clinicName: consulta.clinicName
+                            })} 
+                          >
+                            <Image source={LapisIcon} 
+                              style={styles.lapisIcon} 
+                            />
+                            <Text style={styles.avaliarText}>
+                              Avaliar
+                            </Text>
+                          </TouchableOpacity>
+                        )
                       )}
                     </View>
-                  )}
-                  <View style={styles.buttonsContainer}>
-                    <TouchableOpacity style={styles.verdepequeno}
-                      onPress={() => toggleDetalhes(consulta.id)} 
-                    >
-                      <Text style={styles.textopequeno}>
-                        {detalhesVisiveis[consulta.id] ? 'Ocultar Detalhes' : 'Saiba Mais'}
-                      </Text>
-                    </TouchableOpacity>
 
-                    {aba === 'proximos' && (
-                      <TouchableOpacity style={styles.brancopequeno}
-                        onPress={() => confirmarCancelamento(consulta.id)}
+                    <View style={styles.separator} />
+
+                    <View style={styles.rowCentered}>
+                      <Text style={styles.labelText}>
+                        {(consulta.tipo === 'Clínica' ? 'Clínica:' : 'Empresa:')}
+                      </Text>
+                      <Text style={styles.normalText}> {consulta.clinicName || 'Nome não disponível'}</Text>
+                    </View>
+
+                    <View style={styles.row}>
+                      <Text style={styles.labelText}>
+                        Endereço:
+                      </Text>
+                      <Text style={styles.addressText}> {consulta.endereco || 'Endereço não disponível'}</Text>
+                    </View>
+
+                    {detalhesVisiveis[consulta.id] && (
+                      <View style={styles.detalhesContainer}>
+                        <View style={styles.rowCentered}>
+                          <Text style={styles.smallLabelTextData}>
+                            Data:
+                          </Text>
+                          <Text style={styles.smallNormalText2}> {formatarData(consulta.data)}</Text>
+                        </View>
+
+                        <View style={styles.rowCentered}>
+                          <Text style={styles.smallLabelText}>
+                            Horário:
+                          </Text>
+                          <Text style={styles.smallNormalText}> {consulta.horario || 'Horário não disponível'}</Text>
+                        </View>
+
+                        <View style={styles.rowCentered}>
+                          <Text style={styles.smallLabelText}>
+                            Especialidades:
+                          </Text>
+                          <Text style={styles.smallNormalText}> {consulta.especialidades?.join(', ') || 'Nenhuma especialidade'}</Text>
+                        </View>
+
+                        {consulta.dataCancelamento && (
+                          <View style={styles.rowCentered}>
+                            <Text style={styles.smallLabelText}>
+                              Cancelada em:
+                            </Text>
+                            <Text style={styles.smallNormalText}> {formatarData(consulta.dataCancelamento)}</Text>
+                          </View>
+                        )}
+
+                        {consulta.dataConclusao && (
+                          <View style={styles.rowCentered}>
+                            <Text style={styles.smallLabelText}>
+                              Concluída em:
+                            </Text>
+                            <Text style={styles.smallNormalText}> {formatarData(consulta.dataConclusao)}</Text>
+                          </View>
+                        )}
+                      </View>
+                    )}
+                    <View style={styles.buttonsContainer}>
+                      <TouchableOpacity style={styles.verdepequeno}
+                        onPress={() => toggleDetalhes(consulta.id)} 
                       >
-                        <Text style={styles.textopequeno2}>
-                          Cancelar
+                        <Text style={styles.textopequeno}>
+                          {detalhesVisiveis[consulta.id] ? 'Ocultar Detalhes' : 'Saiba Mais'}
                         </Text>
                       </TouchableOpacity>
-                    )}
-                    
-                    {aba === 'cancelados' && (
-                      <TouchableOpacity style={styles.brancopequeno}
-                        onPress={() => navigation.navigate('AgendamentoCE', { 
-                          clinicId: consulta.clinicId,
-                          especialidadesSelecionadas: consulta.especialidades 
-                        })} 
-                      >
-                        <Text style={styles.textopequeno2}>
-                          Reagendar
-                        </Text>
-                      </TouchableOpacity>
-                    )}
+
+                      {aba === 'proximos' && (
+                        <TouchableOpacity style={styles.brancopequeno}
+                          onPress={() => confirmarCancelamento(consulta.id)}
+                        >
+                          <Text style={styles.textopequeno2}>
+                            Cancelar
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                      
+                      {aba === 'cancelados' && (
+                        <TouchableOpacity style={styles.brancopequeno}
+                          onPress={() => navigation.navigate('AgendamentoCE', { 
+                            clinicId: consulta.clinicId,
+                            especialidadesSelecionadas: consulta.especialidades 
+                          })} 
+                        >
+                          <Text style={styles.textopequeno2}>
+                            Reagendar
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
                   </View>
                 </View>
-              </View>
-            );
-          })}
+              );
+            })}
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-// Os styles permanecem os mesmos...
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
@@ -494,10 +500,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5, 
     paddingTop: 12 
   },
+  // NOVO: Container para o banner
+  bannerContainer: {
+    marginBottom: 10, // Espaço entre o banner e as consultas
+  },
   banner: { 
     width: '106%', 
     height: 310,
-    marginBottom: 10,
+  },
+  // NOVO: Container separado para a lista de consultas
+  consultasListContainer: {
+    marginTop: 10, // Espaço entre o banner e a lista
   },
   proximosHeaderContainer: {
     flexDirection: 'row',
