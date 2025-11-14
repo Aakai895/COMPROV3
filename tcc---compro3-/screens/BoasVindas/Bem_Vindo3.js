@@ -140,7 +140,7 @@ export default function Bem_Vindo3() {
                 maxWidth: 300,
               },
             ]}
-            onPress={() => navigation.navigate('TipoCadastro')}
+            onPress={() => navigation.navigate('Cadastrouni')}
           >
             <Text style={[styles.buttonText, { fontSize: buttonFontSize }]}>
               Cadastrar

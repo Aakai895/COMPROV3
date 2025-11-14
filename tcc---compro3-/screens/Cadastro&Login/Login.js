@@ -9,11 +9,9 @@ import { Eye, EyeOff } from 'lucide-react-native';
 import { useFonts } from 'expo-font';
 import { getResponsiveSizes } from '../../Style/Responsive';
 import { useNavigation } from '@react-navigation/native';
-import { 
-  loginUser, 
-  loginEmpresa, 
-  loginClinica,
-} from '../../firebaseServices';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../../firebaseServices/firebaseConfig';
 
 export default function LoginScreen() { 
   const navigation = useNavigation();
@@ -82,112 +80,133 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email.trim() || !senha.trim()) {
-      alert('Por favor, preencha todos os campos obrigatórios.');
+      alert('Por favor, preencha email e senha.');
       return;
     }
 
     setLoading(true);
 
     try {
-      console.log('Tentando login com:', email);
+      console.log('🔐 Iniciando login...');
       
-      // Tentar login como Usuário primeiro
-      try {
-        const userCredential = await loginUser(email, senha);
-        console.log('Login usuário bem-sucedido:', userCredential.user.uid);
-        navigation.navigate('TelasUsuario', { screen: 'Home' });
-        return;
-      } catch (userError) {
-        console.log('Não é usuário:', userError.code);
+      // 1. Fazer login no Authentication
+      const userCredential = await signInWithEmailAndPassword(auth, email, senha);
+      const user = userCredential.user;
+      console.log('✅ Login Auth bem-sucedido:', user.uid);
+
+      // 2. Buscar dados do usuário para saber o tipo
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      
+      if (!userDoc.exists()) {
+        throw new Error("Dados do usuário não encontrados");
       }
 
-      // Tentar login como Empresa
-      try {
-        const empresaCredential = await loginEmpresa(email, senha);
-        console.log('Login empresa bem-sucedido:', empresaCredential.user.uid);
-        navigation.navigate('TelasCE', { screen: 'HomeCE' });
-        return;
-      } catch (empresaError) {
-        console.log('Não é empresa:', empresaError.code);
+      const userData = userDoc.data();
+      const userType = userData.tipo;
+      const userName = userData.nome;
+      
+      console.log('📊 Tipo de usuário:', userType);
+      console.log('👤 Nome do usuário:', userName);
+
+      // 3. NAVEGAÇÃO ESPECÍFICA CONFORME O TIPO
+      if (userType === 'paciente') {
+        console.log('🎯 Navegando para HOME (Paciente)');
+        navigation.navigate('Home'); // ← Vai para Home se for PACIENTE
+        
+      } else if (userType === 'empresa' || userType === 'clinica') {
+        console.log('🎯 Navegando para HOME CE (Empresa/Clínica)');
+        navigation.navigate('HomeCE'); // ← Vai para HomeCE se for EMPRESA ou CLÍNICA
+        
+      } else {
+        console.log('❓ Tipo desconhecido, indo para Home geral');
+        navigation.navigate('Home');
       }
 
-      // Tentar login como Clínica
-      try {
-        const clinicaCredential = await loginClinica(email, senha);
-        console.log('Login clínica bem-sucedido:', clinicaCredential.user.uid);
-        navigation.navigate('TelasCE', { screen: 'HomeCE' });
-        return;
-      } catch (clinicaError) {
-        console.log('Não é clínica:', clinicaError.code);
-      }
-
-      // Se nenhum login funcionou
+      // Mensagem de boas-vindas
       Alert.alert(
-        'Erro no Login',
-        'Email ou senha incorretos. Verifique suas credenciais.',
+        'Bem-vindo(a)!',
+        `Login realizado com sucesso, ${userName}!`,
         [{ text: 'OK' }]
       );
 
     } catch (error) {
-      console.error('Erro geral no login:', error);
-      Alert.alert(
-        'Erro',
-        'Ocorreu um erro inesperado. Tente novamente.',
-        [{ text: 'OK' }]
-      );
+      console.error('❌ ERRO NO LOGIN:', error);
+      
+      let errorMessage = 'Erro ao fazer login. Tente novamente.';
+      
+      if (error.code === 'auth/user-not-found') {
+        errorMessage = 'Usuário não encontrado. Verifique o email.';
+      } else if (error.code === 'auth/wrong-password') {
+        errorMessage = 'Senha incorreta. Tente novamente.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Email inválido. Verifique o formato.';
+      } else if (error.code === 'auth/network-request-failed') {
+        errorMessage = 'Erro de conexão. Verifique sua internet.';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Muitas tentativas. Tente novamente mais tarde.';
+      } else if (error.message.includes('Dados do usuário não encontrados')) {
+        errorMessage = 'Conta não configurada corretamente. Entre em contato com o suporte.';
+      }
+      
+      Alert.alert('Erro no Login', errorMessage, [{ text: 'OK' }]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Função alternativa mais simples (se preferir)
-  const handleLoginSimple = async () => {
+  // Versão alternativa mais simples e direta
+  const handleLoginSimples = async () => {
     if (!email.trim() || !senha.trim()) {
-      alert('Por favor, preencha todos os campos obrigatórios.');
+      alert('Por favor, preencha email e senha.');
       return;
     }
 
     setLoading(true);
 
     try {
-      // Ordem de tentativa: Usuário → Empresa → Clínica
-      const authAttempts = [
-        { auth: loginUser, type: 'usuário', route: 'TelasUsuario' },
-        { auth: loginEmpresa, type: 'empresa', route: 'TelasCE' },
-        { auth: loginClinica, type: 'clínica', route: 'TelasCE' }
-      ];
+      console.log('🔐 Login simples...');
+      
+      // Login no Auth
+      const userCredential = await signInWithEmailAndPassword(auth, email, senha);
+      const user = userCredential.user;
 
-      for (const attempt of authAttempts) {
-        try {
-          const result = await attempt.auth(email, senha);
-          console.log(`Login ${attempt.type} bem-sucedido:`, result.user.uid);
-          
-          // Navegar para a tela correta
-          navigation.navigate(attempt.route, { 
-            screen: attempt.route === 'TelasUsuario' ? 'Home' : 'HomeCE',
-            params: { userType: attempt.type }
-          });
-          return;
-        } catch (error) {
-          console.log(`Não é ${attempt.type}:`, error.code);
-          continue; // Continua para a próxima tentativa
-        }
+      // Buscar tipo do usuário
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      
+      if (!userDoc.exists()) {
+        throw new Error("Perfil não encontrado");
       }
 
-      // Se chegou aqui, nenhum login funcionou
-      Alert.alert(
-        'Login Inválido',
-        'Email ou senha incorretos. Verifique suas credenciais.',
-        [{ text: 'OK' }]
-      );
+      const userData = userDoc.data();
+      const userType = userData.tipo;
+
+      console.log('🎯 Login bem-sucedido! Tipo:', userType);
+
+      // NAVEGAÇÃO DIRETA - conforme sua solicitação
+      if (userType === 'paciente') {
+        // PACIENTE → Home
+        navigation.navigate('Home');
+      } else {
+        // EMPRESA ou CLÍNICA → HomeCE  
+        navigation.navigate('HomeCE');
+      }
 
     } catch (error) {
-      console.error('Erro no login:', error);
-      Alert.alert(
-        'Erro',
-        'Não foi possível fazer login. Tente novamente.',
-        [{ text: 'OK' }]
-      );
+      console.error('❌ Erro no login:', error);
+      
+      let errorMessage = 'Email ou senha incorretos.';
+      
+      if (error.code === 'auth/user-not-found') {
+        errorMessage = 'Usuário não encontrado.';
+      } else if (error.code === 'auth/wrong-password') {
+        errorMessage = 'Senha incorreta.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Email inválido.';
+      } else if (error.code === 'auth/network-request-failed') {
+        errorMessage = 'Sem conexão com a internet.';
+      }
+      
+      Alert.alert('Erro no Login', errorMessage, [{ text: 'OK' }]);
     } finally {
       setLoading(false);
     }
@@ -321,7 +340,7 @@ export default function LoginScreen() {
           </View>
 
           <TouchableOpacity
-            onPress={handleLoginSimple}
+            onPress={handleLoginSimples} 
             disabled={loading}
             style={[
               styles.loginButton, {
@@ -342,7 +361,7 @@ export default function LoginScreen() {
 
           <View style={styles.registerPromptWrapper}>
             <TouchableOpacity 
-              onPress={() => navigation.navigate('TipoCadastro')}
+              onPress={() => navigation.navigate('Cadastrouni')}
               disabled={loading}
             >
               <Text style={[ 

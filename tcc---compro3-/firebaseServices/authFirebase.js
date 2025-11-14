@@ -1,160 +1,75 @@
-import { doc, setDoc, getDoc, updateDoc, } from "firebase/firestore";
-import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut,
-  sendPasswordResetEmail,
-  updatePassword,
-} from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
+import { auth, db } from './firebaseConfig';
 
-import { 
-  authUsuarios, 
-  authEmpresas, 
-  authClinicas,
-  dbUsuarios,
-  dbEmpresas, 
-  dbClinicas,
-} from "./firebaseConfig";
-
-
-
-// ... (suas funções existentes permanecem aqui) ...
-
-// Função para enviar email de recuperação de senha
-export async function sendPasswordReset(email) {
+// Cadastro Universal
+export const registerUser = async (email, password, userData) => {
   try {
-    console.log("Tentando enviar email de recuperação para:", email);
-    
-    // Tentar encontrar em qual auth o email existe
-    const authInstances = [
-      { auth: authUsuarios, type: 'usuário' },
-      { auth: authEmpresas, type: 'empresa' },
-      { auth: authClinicas, type: 'clínica' }
-    ];
+    // 1. Criar no Authentication
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
 
-    let emailFound = false;
-    
-    for (const instance of authInstances) {
-      try {
-        await sendPasswordResetEmail(instance.auth, email);
-        console.log(`Email de recuperação enviado para ${instance.type}`);
-        emailFound = true;
-        break; // Para no primeiro sucesso
-      } catch (error) {
-        console.log(`Email não encontrado em ${instance.type}:`, error.code);
-        continue;
-      }
-    }
+    // 2. Preparar dados para Firestore
+    const userDoc = {
+      uid: user.uid,
+      email: email,
+      ...userData,
+      criadoEm: new Date(),
+      atualizadoEm: new Date(),
+      ativo: true
+    };
 
-    if (!emailFound) {
-      throw new Error('EMAIL_NOT_FOUND');
-    }
+    // 3. Salvar no Firestore
+    await setDoc(doc(db, "users", user.uid), userDoc);
 
-    return { success: true, message: 'Email de recuperação enviado com sucesso!' };
+    return { success: true, user: userDoc };
   } catch (error) {
-    console.error('Erro ao enviar email de recuperação:', error);
-    
-    if (error.message === 'EMAIL_NOT_FOUND') {
-      throw new Error('Email não encontrado em nosso sistema.');
-    } else if (error.code === 'auth/invalid-email') {
-      throw new Error('Email inválido.');
-    } else {
-      throw new Error('Erro ao enviar email de recuperação. Tente novamente.');
-    }
+    console.error("Erro no cadastro:", error);
+    throw error;
   }
-}
+};
 
-// Função para atualizar senha (após verificação do código)
-export async function updateUserPassword(email, newPassword) {
+// Login
+export const loginUser = async (email, password) => {
   try {
-    console.log("Atualizando senha para:", email);
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
     
-    // Tentar fazer login para verificar credenciais e depois atualizar
-    const authInstances = [
-      { auth: authUsuarios, type: 'usuário', db: dbUsuarios, collection: 'users' },
-      { auth: authEmpresas, type: 'empresa', db: dbEmpresas, collection: 'empresas' },
-      { auth: authClinicas, type: 'clínica', db: dbClinicas, collection: 'clinicas' }
-    ];
-
-    let updateSuccess = false;
+    // Buscar dados adicionais do Firestore
+    const userDoc = await getDoc(doc(db, "users", user.uid));
     
-    for (const instance of authInstances) {
-      try {
-        // Primeiro tentar fazer login (para verificar se o usuário existe)
-        const userCredential = await signInWithEmailAndPassword(instance.auth, email, 'tempPassword');
-        
-        // Se chegou aqui, o usuário existe - agora atualizar a senha
-        await updatePassword(userCredential.user, newPassword);
-        console.log(`Senha atualizada para ${instance.type}:`, email);
-        
-        // Atualizar timestamp no Firestore
-        await updateDoc(doc(instance.db, instance.collection, userCredential.user.uid), {
-          passwordUpdatedAt: new Date()
-        });
-        
-        updateSuccess = true;
-        break;
-      } catch (loginError) {
-        console.log(`Não é ${instance.type} ou senha temporária incorreta:`, loginError.code);
-        continue;
-      }
-    }
-
-    if (!updateSuccess) {
-      throw new Error('USER_NOT_FOUND');
-    }
-
-    return { success: true, message: 'Senha atualizada com sucesso!' };
-  } catch (error) {
-    console.error('Erro ao atualizar senha:', error);
-    
-    if (error.message === 'USER_NOT_FOUND') {
-      throw new Error('Usuário não encontrado.');
+    if (userDoc.exists()) {
+      return { success: true, user: userDoc.data() };
     } else {
-      throw new Error('Erro ao atualizar senha. Tente novamente.');
+      throw new Error("Dados do usuário não encontrados");
     }
+  } catch (error) {
+    console.error("Erro no login:", error);
+    throw error;
   }
-}
+};
 
-// Função alternativa mais simples - apenas envia email de reset
-export async function simplePasswordReset(email) {
+// Logout
+export const logoutUser = async () => {
   try {
-    console.log("Enviando email de reset para:", email);
-    
-    // Ordem de tentativa: Usuário → Empresa → Clínica
-    const authAttempts = [
-      { auth: authUsuarios, type: 'usuário' },
-      { auth: authEmpresas, type: 'empresa' },
-      { auth: authClinicas, type: 'clínica' }
-    ];
-
-    for (const attempt of authAttempts) {
-      try {
-        await sendPasswordResetEmail(attempt.auth, email);
-        console.log(`Email de reset enviado para ${attempt.type}:`, email);
-        return { 
-          success: true, 
-          message: 'Email de recuperação enviado! Verifique sua caixa de entrada.',
-          userType: attempt.type
-        };
-      } catch (error) {
-        console.log(`Não é ${attempt.type}:`, error.code);
-        continue;
-      }
-    }
-
-    throw new Error('EMAIL_NOT_FOUND');
+    await signOut(auth);
+    return { success: true };
   } catch (error) {
-    console.error('Erro no simplePasswordReset:', error);
-    
-    if (error.message === 'EMAIL_NOT_FOUND') {
-      throw new Error('Este email não está cadastrado em nosso sistema.');
-    } else if (error.code === 'auth/invalid-email') {
-      throw new Error('Por favor, insira um email válido.');
-    } else if (error.code === 'auth/user-not-found') {
-      throw new Error('Este email não está cadastrado.');
-    } else {
-      throw new Error('Erro ao enviar email de recuperação. Tente novamente.');
-    }
+    console.error("Erro no logout:", error);
+    throw error;
   }
-}
+};
+
+// Atualizar perfil
+export const updateUserProfile = async (userId, updatedData) => {
+  try {
+    await updateDoc(doc(db, "users", userId), {
+      ...updatedData,
+      atualizadoEm: new Date()
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao atualizar perfil:", error);
+    throw error;
+  }
+};

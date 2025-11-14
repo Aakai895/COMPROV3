@@ -9,13 +9,9 @@ import Bem_Vindo2 from './screens/BoasVindas/Bem_Vindo2';
 import Bem_Vindo1 from './screens/BoasVindas/Bem_Vindo1';
 import Login from './screens/Cadastro&Login/Login';
 import TipoCadastro from './screens/Cadastro&Login/TipoCadastro';
-import CadastroUsuario from './screens/Cadastro&Login/CadastroUsuario';
-import CadastroUsuario2 from './screens/Cadastro&Login/CadastroUsuario2';
-import CadastroEmpresa from './screens/Cadastro&Login/CadastroEmpresa';
-import CadastroEmpresa2 from './screens/Cadastro&Login/CadastroEmpresa2';
+import Cadastrouni from './screens/Cadastro&Login/cadastrounificado1';
+import Cadastrouni2 from './screens/Cadastro&Login/cadastrounificado2'
 import EsqueciSenha from './screens/Cadastro&Login/EsqueciSenha';
-import CadastroClinica from './screens/Cadastro&Login/CadastroClinica';
-import CadastroClinica2 from './screens/Cadastro&Login/CadastroClinica2';
 import TelasUsuario from './screens/TelasUsuario/TelasUsuario';
 import Home from './screens/TelasUsuario/Home';
 import Carrinho from './screens/TelasUsuario/Carrinho';
@@ -71,12 +67,8 @@ export default function App() {
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="EsqueciSenha" component={EsqueciSenha} />
         <Stack.Screen name="TipoCadastro" component={TipoCadastro} />
-        <Stack.Screen name="CadastroUsuario" component={CadastroUsuario} />
-        <Stack.Screen name="CadastroUsuario2" component={CadastroUsuario2} />
-        <Stack.Screen name="CadastroEmpresa" component={CadastroEmpresa} />
-        <Stack.Screen name="CadastroEmpresa2" component={CadastroEmpresa2} />
-        <Stack.Screen name="CadastroClinica" component={CadastroClinica} />
-        <Stack.Screen name="CadastroClinica2" component={CadastroClinica2} />
+        <Stack.Screen name="Cadastrouni" component={Cadastrouni} />
+        <Stack.Screen name="Cadastrouni2" component={Cadastrouni2} />
         <Stack.Screen name="TelasUsuario" component={TelasUsuario} />
         <Stack.Screen name="Home" component={Home} />
         <Stack.Screen name="Carrinho" component={Carrinho} />
