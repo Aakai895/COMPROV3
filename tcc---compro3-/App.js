@@ -8,7 +8,6 @@ import Bem_Vindo3 from './screens/BoasVindas/Bem_Vindo3';
 import Bem_Vindo2 from './screens/BoasVindas/Bem_Vindo2';
 import Bem_Vindo1 from './screens/BoasVindas/Bem_Vindo1';
 import Login from './screens/Cadastro&Login/Login';
-import TipoCadastro from './screens/Cadastro&Login/TipoCadastro';
 import Cadastrouni from './screens/Cadastro&Login/cadastrounificado1';
 import Cadastrouni2 from './screens/Cadastro&Login/cadastrounificado2'
 import EsqueciSenha from './screens/Cadastro&Login/EsqueciSenha';
@@ -66,7 +65,6 @@ export default function App() {
         <Stack.Screen name="Bem_Vindo3" component={Bem_Vindo3} />
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="EsqueciSenha" component={EsqueciSenha} />
-        <Stack.Screen name="TipoCadastro" component={TipoCadastro} />
         <Stack.Screen name="Cadastrouni" component={Cadastrouni} />
         <Stack.Screen name="Cadastrouni2" component={Cadastrouni2} />
         <Stack.Screen name="TelasUsuario" component={TelasUsuario} />
