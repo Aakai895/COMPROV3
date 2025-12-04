@@ -18,7 +18,6 @@ export default function PerfilPaciente() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Dados do paciente - serão preenchidos do Firebase
   const [dadosPaciente, setDadosPaciente] = useState({
     nome: '',
     dataNascimento: '',
@@ -31,7 +30,6 @@ export default function PerfilPaciente() {
     idade: ''
   });
 
-  // Buscar dados reais do paciente no Firebase
   useEffect(() => {
     carregarDadosPaciente();
   }, []);
@@ -49,7 +47,6 @@ export default function PerfilPaciente() {
 
       console.log('📊 Buscando dados do paciente:', user.uid);
 
-      // 1. Buscar dados básicos
       const userDoc = await getDoc(doc(db, "users", user.uid));
       
       if (!userDoc.exists()) {
@@ -59,7 +56,6 @@ export default function PerfilPaciente() {
       const basicData = userDoc.data();
       console.log('✅ Dados básicos:', basicData);
 
-      // 2. Buscar dados específicos do paciente
       const pacienteDoc = await getDoc(doc(db, "pacientes", user.uid));
       let pacienteData = {};
       
@@ -68,7 +64,6 @@ export default function PerfilPaciente() {
         console.log('✅ Dados paciente:', pacienteData);
       }
 
-      // 3. Combinar e formatar dados
       const dadosCombinados = {
         nome: basicData.nome || '',
         email: basicData.email || '',
@@ -86,7 +81,6 @@ export default function PerfilPaciente() {
 
       setDadosPaciente(dadosCombinados);
 
-      // 4. Carregar imagem salva localmente
       const imagemSalva = await AsyncStorage.getItem('profileImage');
       if (imagemSalva) {
         setProfileImage({ uri: imagemSalva });
@@ -139,14 +133,12 @@ export default function PerfilPaciente() {
 
       console.log('💾 Salvando alterações do paciente...');
 
-      // 1. Atualizar dados básicos
       await updateDoc(doc(db, "users", user.uid), {
         nome: dadosPaciente.nome,
         telefone: dadosPaciente.telefone,
         atualizadoEm: new Date()
       });
 
-      // 2. Atualizar dados do paciente
       await updateDoc(doc(db, "pacientes", user.uid), {
         sexo: dadosPaciente.sexo,
         bio: dadosPaciente.bio,

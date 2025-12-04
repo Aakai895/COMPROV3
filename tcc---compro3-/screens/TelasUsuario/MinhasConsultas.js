@@ -19,7 +19,6 @@ export default function MinhasConsultas() {
   const [consultas, setConsultas] = useState([]);
   const [userId, setUserId] = useState(null);
 
-  // Monitora autenticação do usuário
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -33,14 +32,12 @@ export default function MinhasConsultas() {
     return unsubscribeAuth;
   }, []);
 
-  // Busca consultas do usuário no Firebase - SEM ORDERBY para evitar índice
   useEffect(() => {
     if (!userId) return;
 
     const q = query(
       collection(db, 'consultas'),
       where('userId', '==', userId)
-      // Removido orderBy para evitar necessidade de índice
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -49,10 +46,8 @@ export default function MinhasConsultas() {
         consultasData.push({ id: doc.id, ...doc.data() });
       });
       
-      // Ordenar localmente por data
       consultasData.sort((a, b) => new Date(a.data) - new Date(b.data));
       
-      // Verificar e atualizar status das consultas automaticamente
       consultasData.forEach(consulta => {
         verificarEAtualizarStatus(consulta);
       });
@@ -63,17 +58,13 @@ export default function MinhasConsultas() {
     return unsubscribe;
   }, [userId]);
 
-  // Função para verificar e atualizar status automaticamente
   const verificarEAtualizarStatus = async (consulta) => {
     try {
-      // Só atualiza se ainda estiver como agendada
       if (consulta.status !== 'agendada') return;
       
       const hoje = new Date();
       const dataConsulta = new Date(consulta.data);
-      
-      // Se a consulta já passou, marcar como concluída
-      if (dataConsulta < hoje) {
+        if (dataConsulta < hoje) {
         const consultaRef = doc(db, 'consultas', consulta.id);
         await updateDoc(consultaRef, {
           status: 'concluida',
@@ -90,7 +81,6 @@ export default function MinhasConsultas() {
     setDetalhesVisiveis(prev => ({ ...prev, [consultaId]: !prev[consultaId] }));
   };
 
-  // Função para cancelar consulta
   const cancelarConsulta = async (consultaId) => {
     try {
       const consultaRef = doc(db, 'consultas', consultaId);
@@ -105,7 +95,6 @@ export default function MinhasConsultas() {
     }
   };
 
-  // Função para confirmar cancelamento
   const confirmarCancelamento = (consultaId) => {
     Alert.alert(
       'Cancelar Consulta',
@@ -117,7 +106,6 @@ export default function MinhasConsultas() {
     );
   };
 
-  // Filtrar consultas baseado na aba selecionada
   const consultasFiltradas = consultas.filter(consulta => {
     if (aba === 'proximos') {
       return consulta.status === 'agendada';
@@ -129,13 +117,11 @@ export default function MinhasConsultas() {
     return false;
   });
 
-  // Formatar data para exibição
   const formatarData = (dataString) => {
     if (!dataString) return 'Data não definida';
     
     try {
       const data = new Date(dataString);
-      // Verificar se a data é válida
       if (isNaN(data.getTime())) {
         return 'Data inválida';
       }
@@ -153,7 +139,6 @@ export default function MinhasConsultas() {
     }
   };
 
-  // Encontrar próxima consulta para o banner
   const proximaConsulta = consultasFiltradas
     .filter(consulta => consulta.status === 'agendada')
     .sort((a, b) => new Date(a.data) - new Date(b.data))[0];
@@ -500,17 +485,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5, 
     paddingTop: 12 
   },
-  // NOVO: Container para o banner
   bannerContainer: {
-    marginBottom: 10, // Espaço entre o banner e as consultas
+    marginBottom: 10, 
   },
   banner: { 
     width: '106%', 
     height: 310,
   },
-  // NOVO: Container separado para a lista de consultas
   consultasListContainer: {
-    marginTop: 10, // Espaço entre o banner e a lista
+    marginTop: 10, 
   },
   proximosHeaderContainer: {
     flexDirection: 'row',

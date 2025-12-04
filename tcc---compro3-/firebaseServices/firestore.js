@@ -12,10 +12,6 @@ import {
   limit
 } from 'firebase/firestore';
 import { db } from '../config';
-
-// 📱 FUNÇÕES PARA USUÁRIOS (COLETA 'users')
-
-// Buscar dados básicos do usuário
 export const getUserBasicData = async (userId) => {
   try {
     const userDoc = await getDoc(doc(db, "users", userId));
@@ -30,7 +26,6 @@ export const getUserBasicData = async (userId) => {
   }
 };
 
-// Atualizar dados básicos do usuário
 export const updateUserBasicData = async (userId, updatedData) => {
   try {
     await updateDoc(doc(db, "users", userId), {
@@ -44,7 +39,6 @@ export const updateUserBasicData = async (userId, updatedData) => {
   }
 };
 
-// Buscar usuário por email
 export const getUserByEmail = async (email) => {
   try {
     const q = query(collection(db, "users"), where("email", "==", email));
@@ -62,9 +56,6 @@ export const getUserByEmail = async (email) => {
   }
 };
 
-// 📱 FUNÇÕES PARA PACIENTES (COLETA 'pacientes')
-
-// Buscar dados completos do paciente
 export const getPacienteData = async (userId) => {
   try {
     const pacienteDoc = await getDoc(doc(db, "pacientes", userId));
@@ -79,7 +70,6 @@ export const getPacienteData = async (userId) => {
   }
 };
 
-// Atualizar dados do paciente
 export const updatePacienteData = async (userId, updatedData) => {
   try {
     await updateDoc(doc(db, "pacientes", userId), {
@@ -93,7 +83,6 @@ export const updatePacienteData = async (userId, updatedData) => {
   }
 };
 
-// Adicionar emoção registrada
 export const addEmocaoPaciente = async (userId, emocaoData) => {
   try {
     const pacienteRef = doc(db, "pacientes", userId);
@@ -122,14 +111,12 @@ export const addEmocaoPaciente = async (userId, emocaoData) => {
   }
 };
 
-// Buscar histórico de emoções
 export const getEmocoesPaciente = async (userId, limite = 10) => {
   try {
     const pacienteDoc = await getDoc(doc(db, "pacientes", userId));
     if (pacienteDoc.exists()) {
       const data = pacienteDoc.data();
       const emocoes = data.emocoesRegistradas || [];
-      // Ordenar por data mais recente e limitar
       const emocoesOrdenadas = emocoes
         .sort((a, b) => new Date(b.registradoEm) - new Date(a.registradoEm))
         .slice(0, limite);
@@ -144,9 +131,7 @@ export const getEmocoesPaciente = async (userId, limite = 10) => {
   }
 };
 
-// 📱 FUNÇÕES PARA EMPRESAS (COLETA 'empresas')
 
-// Buscar dados completos da empresa
 export const getEmpresaData = async (userId) => {
   try {
     const empresaDoc = await getDoc(doc(db, "empresas", userId));
@@ -161,7 +146,6 @@ export const getEmpresaData = async (userId) => {
   }
 };
 
-// Atualizar dados da empresa
 export const updateEmpresaData = async (userId, updatedData) => {
   try {
     await updateDoc(doc(db, "empresas", userId), {
@@ -175,7 +159,6 @@ export const updateEmpresaData = async (userId, updatedData) => {
   }
 };
 
-// Adicionar serviço oferecido
 export const addServicoEmpresa = async (userId, servicoData) => {
   try {
     const empresaRef = doc(db, "empresas", userId);
@@ -203,10 +186,6 @@ export const addServicoEmpresa = async (userId, servicoData) => {
     return { success: false, error: error.message };
   }
 };
-
-// 📱 FUNÇÕES PARA CLÍNICAS (COLETA 'clinicas')
-
-// Buscar dados completos da clínica
 export const getClinicaData = async (userId) => {
   try {
     const clinicaDoc = await getDoc(doc(db, "clinicas", userId));
@@ -221,7 +200,6 @@ export const getClinicaData = async (userId) => {
   }
 };
 
-// Atualizar dados da clínica
 export const updateClinicaData = async (userId, updatedData) => {
   try {
     await updateDoc(doc(db, "clinicas", userId), {
@@ -235,7 +213,6 @@ export const updateClinicaData = async (userId, updatedData) => {
   }
 };
 
-// Adicionar convênio à clínica
 export const addConvenioClinica = async (userId, convenioData) => {
   try {
     const clinicaRef = doc(db, "clinicas", userId);
@@ -264,7 +241,6 @@ export const addConvenioClinica = async (userId, convenioData) => {
   }
 };
 
-// Adicionar profissional à clínica
 export const addProfissionalClinica = async (userId, profissionalData) => {
   try {
     const clinicaRef = doc(db, "clinicas", userId);
@@ -293,12 +269,8 @@ export const addProfissionalClinica = async (userId, profissionalData) => {
   }
 };
 
-// 📱 FUNÇÕES GERAIS (BUSCAR PERFIL COMPLETO)
-
-// Buscar perfil completo do usuário (básico + específico)
 export const getPerfilCompleto = async (userId) => {
   try {
-    // 1. Buscar dados básicos
     const userResult = await getUserBasicData(userId);
     if (!userResult.success) {
       return userResult;
@@ -307,7 +279,6 @@ export const getPerfilCompleto = async (userId) => {
     const userData = userResult.data;
     const tipoUsuario = userData.tipo;
 
-    // 2. Buscar dados específicos conforme o tipo
     let dadosEspecificos = {};
     
     switch(tipoUsuario) {
@@ -333,7 +304,6 @@ export const getPerfilCompleto = async (userId) => {
         break;
     }
 
-    // 3. Combinar dados
     const perfilCompleto = {
       ...userData,
       ...dadosEspecificos
@@ -347,7 +317,6 @@ export const getPerfilCompleto = async (userId) => {
   }
 };
 
-// Atualizar último acesso
 export const updateUltimoAcesso = async (userId) => {
   try {
     await updateDoc(doc(db, "users", userId), {
@@ -360,7 +329,6 @@ export const updateUltimoAcesso = async (userId) => {
   }
 };
 
-// Buscar todos os usuários de um tipo (para admin)
 export const getUsersByType = async (tipoUsuario) => {
   try {
     const q = query(collection(db, "users"), where("tipo", "==", tipoUsuario));
@@ -378,7 +346,6 @@ export const getUsersByType = async (tipoUsuario) => {
   }
 };
 
-// Verificar se perfil está completo
 export const checkPerfilCompleto = async (userId) => {
   try {
     const userDoc = await getDoc(doc(db, "users", userId));
@@ -388,7 +355,7 @@ export const checkPerfilCompleto = async (userId) => {
         success: true, 
         data: { 
           perfilCompleto: userData.perfilCompleto || false,
-          camposFaltantes: [] // pode implementar lógica específica
+          camposFaltantes: [] 
         }
       };
     } else {

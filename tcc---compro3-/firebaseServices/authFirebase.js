@@ -2,14 +2,11 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } f
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from './firebaseConfig';
 
-// Cadastro Universal
 export const registerUser = async (email, password, userData) => {
   try {
-    // 1. Criar no Authentication
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // 2. Preparar dados para Firestore
     const userDoc = {
       uid: user.uid,
       email: email,
@@ -19,7 +16,6 @@ export const registerUser = async (email, password, userData) => {
       ativo: true
     };
 
-    // 3. Salvar no Firestore
     await setDoc(doc(db, "users", user.uid), userDoc);
 
     return { success: true, user: userDoc };
@@ -29,13 +25,11 @@ export const registerUser = async (email, password, userData) => {
   }
 };
 
-// Login
 export const loginUser = async (email, password) => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
-    // Buscar dados adicionais do Firestore
     const userDoc = await getDoc(doc(db, "users", user.uid));
     
     if (userDoc.exists()) {
@@ -49,7 +43,6 @@ export const loginUser = async (email, password) => {
   }
 };
 
-// Logout
 export const logoutUser = async () => {
   try {
     await signOut(auth);
@@ -60,7 +53,6 @@ export const logoutUser = async () => {
   }
 };
 
-// Atualizar perfil
 export const updateUserProfile = async (userId, updatedData) => {
   try {
     await updateDoc(doc(db, "users", userId), {

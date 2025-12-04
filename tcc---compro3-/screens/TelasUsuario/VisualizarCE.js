@@ -516,7 +516,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff'
   },
-  // NOVOS ESTILOS PARA SCROLL
   scrollView: {
     flex: 1,
   },
@@ -524,7 +523,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   spacer: {
-    height: 80, // Espaço para os botões não sobreporem o conteúdo
+    height: 80, 
   },
   container: { 
     flex: 1 

@@ -13,18 +13,15 @@ export default function Home({ navigation }) {
   const [userData, setUserData] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
 
-  // Monitora o usuário logado e busca dados do Firestore
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setCurrentUser(user);
-        // Buscar dados adicionais do usuário no Firestore
         try {
           const userDoc = await getDoc(doc(db, 'users', user.uid));
           if (userDoc.exists()) {
             setUserData(userDoc.data());
           } else {
-            // Se não encontrar no Firestore, usar dados básicos do auth
             setUserData({
               name: user.displayName || 'Usuário',
               email: user.email,
@@ -33,7 +30,6 @@ export default function Home({ navigation }) {
           }
         } catch (error) {
           console.error('Erro ao buscar dados do usuário:', error);
-          // Fallback para dados do auth
           setUserData({
             name: user.displayName || 'Usuário',
             email: user.email,
@@ -56,7 +52,6 @@ export default function Home({ navigation }) {
         if (imagemSalva) {
           setProfileImage({ uri: imagemSalva });
         } else {
-          // Se não tiver imagem salva, usa uma padrão
           setProfileImage(require('../../assets/Elementos_Complementares/user.jpg'));
         }
       } catch (error) {
@@ -90,7 +85,6 @@ export default function Home({ navigation }) {
     setModalVisible(false);
   };
 
-  // Dados do usuário para exibição
   const userName = userData?.name || currentUser?.displayName || 'Usuário';
   const userEmail = userData?.email || currentUser?.email || '';
 

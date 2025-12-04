@@ -26,7 +26,6 @@ export default function CadastroTipoScreen() {
     Findel: require('../../fonts/Findel-Display-Regular.otf'),
   });
 
-  // Verificar se as fontes carregaram ou se houve erro
   const fontsReady = fontsLoaded || fontError;
 
   useEffect(() => {
@@ -76,7 +75,6 @@ export default function CadastroTipoScreen() {
       return;
     }
 
-    // Validação básica de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       Alert.alert('Atenção', 'Por favor, insira um email válido.');
@@ -94,7 +92,6 @@ export default function CadastroTipoScreen() {
     navigation.navigate('Cadastrouni2', { dadosTela1 });
   };
 
-  // Se as fontes não carregaram ainda, mostrar tela vazia
   if (!fontsReady) {
     return (
       <View style={styles.wrapper}>

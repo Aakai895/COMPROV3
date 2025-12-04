@@ -7,14 +7,11 @@ import { auth, db } from '../../firebaseServices/firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 
-// Função para descriptografar imagem (simulação)
 const getProfileImage = (userType, userData) => {
-  // Se o usuário tiver uma foto de perfil customizada
   if (userData?.profileImage) {
     return { uri: userData.profileImage };
   }
   
-  // Imagens padrão baseadas no tipo de usuário
   const defaultImages = {
     user: require('../../assets/Plano_Fundo/ExploreApp.jpg.png'),
     clinic: require('../../assets/icones/ClinicaIcon.png'),
@@ -33,22 +30,19 @@ export default function Home({ navigation }) {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setCurrentUser(user);
-        // Buscar dados adicionais do usuário no Firestore
         try {
           const userDoc = await getDoc(doc(db, 'users', user.uid));
           if (userDoc.exists()) {
             setUserData(userDoc.data());
           } else {
-            // Se não encontrar no Firestore, usar dados básicos do auth
             setUserData({
               name: user.displayName || 'Usuário',
               email: user.email,
-              userType: 'user' // padrão
+              userType: 'user' 
             });
           }
         } catch (error) {
           console.error('Erro ao buscar dados:', error);
-          // Fallback para dados do auth
           setUserData({
             name: user.displayName || 'Usuário',
             email: user.email,
@@ -79,7 +73,6 @@ export default function Home({ navigation }) {
     setModalVisible(false);
   };
 
-  // Dados do usuário para exibição
   const userName = userData?.name || currentUser?.displayName || 'Usuário';
   const userEmail = userData?.email || currentUser?.email || '';
   const userType = userData?.userType || 'user';

@@ -35,7 +35,6 @@ export default function DetalhesClinica() {
   const [selecionados, setSelecionados] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
 
-  // Monitorar usuário logado
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
@@ -207,7 +206,6 @@ export default function DetalhesClinica() {
     setHorarios(horariosGerados);
   }, [clinic]);
 
-  // Função para validar campos
   const validarCampos = () => {
     if (!currentUser) {
       Alert.alert('Erro', 'Você precisa estar logado para agendar uma consulta.');
@@ -232,14 +230,13 @@ export default function DetalhesClinica() {
     return true;
   };
 
-  // Função para agendar consulta no Firebase
+
   const agendarConsulta = async () => {
     if (!validarCampos()) return;
 
     setAgendando(true);
 
     try {
-      // Criar objeto da consulta
       const consultaData = {
         userId: currentUser.uid,
         userEmail: currentUser.email,
@@ -255,12 +252,10 @@ export default function DetalhesClinica() {
         tipo: 'Clínica'
       };
 
-      // Salvar no Firestore
       const docRef = await addDoc(collection(db, 'consultas'), consultaData);
       
       console.log('Consulta agendada com ID:', docRef.id);
       
-      // Mostrar mensagem de sucesso
       Alert.alert(
         'Sucesso!', 
         'Consulta agendada com sucesso!',
@@ -268,7 +263,6 @@ export default function DetalhesClinica() {
           {
             text: 'OK',
             onPress: () => {
-              // Navegar de volta ou para minhas consultas
               navigation.navigate('MinhasConsultas');
             }
           }

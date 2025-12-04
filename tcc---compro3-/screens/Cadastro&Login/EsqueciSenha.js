@@ -20,7 +20,7 @@ export default function EsqueciSenhaScreen() {
   const [codeInputs, setCodeInputs] = useState(['', '', '', '', '']);
   const [errorEmail, setErrorEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [verificationCode, setVerificationCode] = useState(''); // Código gerado
+  const [verificationCode, setVerificationCode] = useState(''); 
   const inputsRef = useRef([]);
   const [novaSenhaVisible, setNovaSenhaVisible] = useState(false);
   const [senhaVisible, setSenhaVisible] = useState(false);
@@ -45,7 +45,6 @@ export default function EsqueciSenhaScreen() {
     return re.test(email.toLowerCase());
   };
 
-  // Gerar código de verificação aleatório
   const generateVerificationCode = () => {
     return Math.floor(10000 + Math.random() * 90000).toString();
   };
@@ -63,14 +62,11 @@ export default function EsqueciSenhaScreen() {
 
       setLoading(true);
       try {
-        // Enviar email de recuperação via Firebase
         const result = await simplePasswordReset(email);
         
-        // Gerar código de verificação local (simulação)
         const generatedCode = generateVerificationCode();
         setVerificationCode(generatedCode);
         
-        // Em produção real, o código viria do Firebase ou serviço de email
         console.log('Código de verificação (em produção viria por email):', generatedCode);
         
         Alert.alert(
@@ -95,7 +91,6 @@ export default function EsqueciSenhaScreen() {
 
       const enteredCode = codeInputs.join('');
       
-      // Verificar se o código está correto
       if (enteredCode === verificationCode) {
         setStep(3);
       } else {
@@ -118,7 +113,6 @@ export default function EsqueciSenhaScreen() {
 
       setLoading(true);
       try {
-        // Atualizar senha no Firebase
         await updateUserPassword(email, novaSenha);
         
         Alert.alert(
@@ -168,7 +162,6 @@ export default function EsqueciSenhaScreen() {
       const generatedCode = generateVerificationCode();
       setVerificationCode(generatedCode);
       
-      // Em produção, reenviaria o email via Firebase
       console.log('Novo código:', generatedCode);
       
       Alert.alert(
@@ -177,7 +170,6 @@ export default function EsqueciSenhaScreen() {
         [{ text: 'OK' }]
       );
       
-      // Limpar inputs
       setCodeInputs(['', '', '', '', '']);
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível reenviar o código. Tente novamente.');

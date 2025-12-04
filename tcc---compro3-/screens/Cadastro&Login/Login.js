@@ -87,14 +87,12 @@ export default function LoginScreen() {
     setLoading(true);
 
     try {
-      console.log('🔐 Iniciando login...');
+      console.log(' Iniciando login...');
       
-      // 1. Fazer login no Authentication
       const userCredential = await signInWithEmailAndPassword(auth, email, senha);
       const user = userCredential.user;
-      console.log('✅ Login Auth bem-sucedido:', user.uid);
+      console.log(' Login Auth bem-sucedido:', user.uid);
 
-      // 2. Buscar dados do usuário para saber o tipo
       const userDoc = await getDoc(doc(db, "users", user.uid));
       
       if (!userDoc.exists()) {
@@ -105,10 +103,9 @@ export default function LoginScreen() {
       const userType = userData.tipo;
       const userName = userData.nome;
       
-      console.log('📊 Tipo de usuário:', userType);
-      console.log('👤 Nome do usuário:', userName);
+      console.log(' Tipo de usuário:', userType);
+      console.log(' Nome do usuário:', userName);
 
-      // 3. NAVEGAÇÃO ESPECÍFICA CONFORME O TIPO
       if (userType === 'paciente') {
         console.log('🎯 Navegando para HOME (Paciente)');
         navigation.navigate('TelasUsuario'); 
@@ -122,7 +119,6 @@ export default function LoginScreen() {
         navigation.navigate('Home');
       }
 
-      // Mensagem de boas-vindas
       Alert.alert(
         'Bem-vindo(a)!',
         `Login realizado com sucesso, ${userName}!`,
@@ -154,7 +150,6 @@ export default function LoginScreen() {
     }
   };
 
-  // Versão alternativa mais simples e direta
   const handleLoginSimples = async () => {
     if (!email.trim() || !senha.trim()) {
       alert('Por favor, preencha email e senha.');
@@ -166,11 +161,9 @@ export default function LoginScreen() {
     try {
       console.log('🔐 Login simples...');
       
-      // Login no Auth
       const userCredential = await signInWithEmailAndPassword(auth, email, senha);
       const user = userCredential.user;
 
-      // Buscar tipo do usuário
       const userDoc = await getDoc(doc(db, "users", user.uid));
       
       if (!userDoc.exists()) {
@@ -182,12 +175,9 @@ export default function LoginScreen() {
 
       console.log('🎯 Login bem-sucedido! Tipo:', userType);
 
-      // NAVEGAÇÃO DIRETA - conforme sua solicitação
       if (userType === 'paciente') {
-        // PACIENTE → Home
         navigation.navigate('TelasUsuario', { screen: 'Home' });
       } else {
-        // EMPRESA ou CLÍNICA → HomeCE  
         navigation.navigate('TelasCE', { screen: 'HomeCE' });
       }
 

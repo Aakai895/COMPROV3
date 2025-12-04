@@ -13,7 +13,6 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebaseServices/firebaseConfig';
 
-// Definir estadosECidades fora do componente para evitar problemas de escopo
 const estadosECidades = {
   SP: ['São Paulo', 'Osasco', 'Taboão da Serra', 'Embu das Artes', 'Cotia'],
   RJ: ['Rio de Janeiro', 'Niterói', 'Duque de Caxias', 'Nova Iguaçu'],
@@ -44,7 +43,7 @@ export default function CadastroDadosScreen() {
   const [afe, setAfe] = useState('');
   const [especialidades, setEspecialidades] = useState('');
   const [estado, setEstado] = useState('SP');
-  const [cidade, setCidade] = useState(estadosECidades.SP[0]); // Inicializar com valor válido
+  const [cidade, setCidade] = useState(estadosECidades.SP[0]);  
   const [endereco, setEndereco] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
 
@@ -98,7 +97,6 @@ export default function CadastroDadosScreen() {
 
   const handleEstadoChange = (value) => {
     setEstado(value);
-    // Atualizar cidade para o primeiro valor do novo estado
     if (estadosECidades[value] && estadosECidades[value].length > 0) {
       setCidade(estadosECidades[value][0]);
     }
@@ -113,7 +111,6 @@ export default function CadastroDadosScreen() {
   const handleCadastrar = async () => {
     console.log('🎯 SALVANDO EM COLETAS ESPECÍFICAS...');
     
-    // Validações básicas
     if (!senha || !confirmarSenha) {
       alert('Preencha a senha e confirmação.');
       return;
@@ -149,12 +146,10 @@ export default function CadastroDadosScreen() {
     try {
       console.log('📧 Criando usuário no Auth...');
       
-      // 1. Criar usuário no Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, dadosTela1.email, senha);
       const user = userCredential.user;
       console.log('✅ Usuário criado:', user.uid);
 
-      // 2. Dados básicos (comuns a todos)
       const dadosBasicos = {
         uid: user.uid,
         nome: dadosTela1.nome,
@@ -169,11 +164,9 @@ export default function CadastroDadosScreen() {
         ultimoAcesso: new Date()
       };
 
-      // 3. Salvar dados básicos na coleção 'users'
       console.log('💾 Salvando dados básicos em "users"...');
       await setDoc(doc(db, "users", user.uid), dadosBasicos);
 
-      // 4. Salvar dados específicos na coleção correspondente
       let colecaoEspecifica = '';
       let dadosEspecificos = {};
 
@@ -281,7 +274,6 @@ export default function CadastroDadosScreen() {
     }
   };
 
-  // Função auxiliar para calcular idade
   function calcularIdade(dataNascimento) {
     if (!dataNascimento) return null;
     const hoje = new Date();

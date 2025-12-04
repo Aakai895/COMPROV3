@@ -61,7 +61,6 @@ export default function FAQ() {
     },
   ];
 
-  // Filtro baseado na busca
   const perguntasFiltradas = perguntas.filter(item =>
     item.pergunta.toLowerCase().includes(searchText.toLowerCase())
   );
